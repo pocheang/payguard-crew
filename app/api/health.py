@@ -45,7 +45,7 @@ def health_check() -> HealthResponse:
 
     return HealthResponse(
         status=get_overall_status(components),
-        version="0.1.0",
+        version="0.1.1",
         timestamp=datetime.utcnow().isoformat() + "Z",
         environment=settings.app_env,
         components=components
