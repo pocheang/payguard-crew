@@ -1,0 +1,15 @@
+{
+  "transaction_id": "TX20260623001",
+  "user_id": "U10086",
+  "merchant_id": "M2033",
+  "amount": 9800,
+  "currency": "CNY",
+  "account_age_days": 3,
+  "transaction_frequency_1h": 12,
+  "ip_location_status": "abnormal",
+  "device_status": "abnormal",
+  "kyc_status": "basic_verified",
+  "merchant_risk_level": "medium",
+  "is_blacklisted": false,
+  "timestamp": "2026-06-23T10:30:00"
+}

@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  payguard-crew:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: payguard-crew:latest
+    container_name: payguard-crew
+    ports:
+      - "8000:8000"
+    volumes:
+      # 挂载数据目录（持久化数据库和向量库）
+      - ./data:/app/data
+      - ./docs:/app/docs
+      - ./.chroma:/app/.chroma
+      - ./logs:/app/logs
+      # 可选：挂载 SQLite 数据库到宿主机
+      - ./payguard_crew.db:/app/payguard_crew.db
+    environment:
+      # 应用配置
+      - APP_NAME=payguard-crew
+      - APP_ENV=docker
+
+      # LLM 配置（可选）
+      - LLM_PROVIDER=${LLM_PROVIDER:-disabled}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-chat}
+      - DEEPSEEK_BASE_URL=${DEEPSEEK_BASE_URL:-https://api.deepseek.com}
+
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - OPENAI_BASE_URL=${OPENAI_BASE_URL:-}
+
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://localhost:11434/v1}
+
+      # CrewAI 配置
+      - ENABLE_CREWAI=${ENABLE_CREWAI:-false}
+
+      # RAG 配置
+      - RAG_TOP_K=${RAG_TOP_K:-3}
+      - PAYGUARD_DOCS_DIR=/app/docs
+
+      # 数据库配置
+      - SQLITE_DB_PATH=/app/payguard_crew.db
+
+      # LLM 超时配置
+      - LLM_TIMEOUT_SECONDS=${LLM_TIMEOUT_SECONDS:-30}
+      - LLM_MAX_RETRIES=${LLM_MAX_RETRIES:-2}
+
+    # 健康检查
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 5s
+
+    # 重启策略
+    restart: unless-stopped
+
+    # 网络
+    networks:
+      - payguard-network
+
+networks:
+  payguard-network:
+    driver: bridge
