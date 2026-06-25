@@ -1,0 +1,23 @@
+{
+  "transaction_id": "TX20260625999",
+  "user_id": "U99999",
+  "merchant_id": "M999001",
+  "amount": 9950.00,
+  "currency": "CNY",
+  "account_age_days": 2,
+  "transaction_frequency_1h": 25,
+  "transaction_frequency_24h": 120,
+  "transaction_frequency_7d": 450,
+  "ip_location_status": "abnormal",
+  "device_status": "abnormal",
+  "kyc_status": "unverified",
+  "merchant_risk_level": "high",
+  "is_blacklisted": false,
+  "timestamp": "2026-06-25T02:30:00",
+  "device_id": "emulator_device_12345",
+  "ip_address": "103.21.244.8",
+  "user_agent": "Mozilla/5.0 (Linux; Android 10; Emulator Build/QSR1.190920.001)",
+  "merchant_category": "crypto",
+  "is_cross_border": true,
+  "chargeback_history": 0
+}

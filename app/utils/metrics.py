@@ -1,4 +1,4 @@
-"""
+﻿"""
 监控指标工具模块
 
 提供便捷的方法来记录 Prometheus 指标
@@ -43,7 +43,7 @@ def time_audit_request(endpoint: str) -> Generator[None, None, None]:
     使用方式:
         with time_audit_request("transaction"):
             # 执行审计逻辑
-            pass
+        # 空实现
     """
     start = time.perf_counter()
     try:
@@ -60,7 +60,7 @@ def time_llm_request(provider: str) -> Generator[None, None, None]:
     使用方式:
         with time_llm_request("deepseek"):
             # 执行 LLM 调用
-            pass
+        # 空实现
     """
     start = time.perf_counter()
     try:

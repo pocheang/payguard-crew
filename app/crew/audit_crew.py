@@ -1,6 +1,22 @@
 """
-审计工作流主入口（优化版）
+审计工作流主入口 (LEGACY VERSION - 500 lines)
 
+⚠️ DEPRECATION NOTICE:
+This is the original monolithic implementation.
+
+For new code, please use: app/crew/audit_crew_refactored.py (110 lines)
+Benefits:
+- 78% code reduction (500 → 110 lines)
+- Better modularity (agents/ and fallbacks/ directories)
+- Easier to maintain and extend
+- Same functionality and performance
+
+This file is kept for backward compatibility only.
+Planned removal: v0.2.0
+
+Migration Guide: See docs/MIGRATION_GUIDE.md
+
+---
 协调各个 Agent 执行审计流程
 支持并行执行以提升性能
 """
@@ -23,12 +39,20 @@ from app.crew.parsers import (
     parse_compliance_result,
     parse_evidence_summary,
     parse_report_payload,
+    parse_fraud_detection_result,
+    parse_merchant_risk_result,
+    parse_device_fingerprint_result,
+    parse_velocity_check_result,
 )
 from app.crew.fallbacks import (
     build_transaction_findings,
     build_compliance_notes,
     build_fallback_summary,
     build_fallback_suggestion,
+    build_fraud_detection_result,
+    build_merchant_risk_result,
+    build_device_fingerprint_result,
+    build_velocity_check_result,
 )
 from app.crew.utils import log_status
 
@@ -188,6 +212,138 @@ async def _run_rag_agent(
     return evidence, evidence_summary, rag_output, log_entry
 
 
+async def _run_fraud_detection_agent(
+    tx: TransactionInput, tx_payload: dict, registry: dict, attempted_crewai: bool
+) -> tuple[dict, AuditLogEntry]:
+    """Fraud Detection Agent - 欺诈检测"""
+    started = perf_counter()
+    local_fraud_result = build_fraud_detection_result(tx)
+
+    fraud_payload, fraud_llm_ms, fraud_error = await run_crewai_json_task_async(
+        registry["fraud_detection_agent"],
+        {"transaction": tx_payload},
+    )
+    fraud_result = parse_fraud_detection_result(fraud_payload)
+    if fraud_payload and fraud_result is None:
+        fraud_error = fraud_error or "CrewAI payload missing fraud detection keys"
+
+    fraud_output = {
+        "backend": "crewai" if fraud_result else "local",
+        **(fraud_result or local_fraud_result),
+    }
+
+    log_entry = AuditLogEntry(
+        agent_name="fraud_detection_agent",
+        input_data=str(tx_payload),
+        output_data=str(fraud_output),
+        status=log_status(fraud_error, attempted_crewai),
+        latency_ms=int((perf_counter() - started) * 1000) + fraud_llm_ms,
+        error_message=fraud_error,
+        created_at=None,
+    )
+
+    return fraud_output, log_entry
+
+
+async def _run_merchant_risk_agent(
+    tx: TransactionInput, tx_payload: dict, registry: dict, attempted_crewai: bool
+) -> tuple[dict, AuditLogEntry]:
+    """Merchant Risk Agent - 商户风险评估"""
+    started = perf_counter()
+    local_merchant_result = build_merchant_risk_result(tx)
+
+    merchant_payload, merchant_llm_ms, merchant_error = await run_crewai_json_task_async(
+        registry["merchant_risk_agent"],
+        {"transaction": tx_payload},
+    )
+    merchant_result = parse_merchant_risk_result(merchant_payload)
+    if merchant_payload and merchant_result is None:
+        merchant_error = merchant_error or "CrewAI payload missing merchant risk keys"
+
+    merchant_output = {
+        "backend": "crewai" if merchant_result else "local",
+        **(merchant_result or local_merchant_result),
+    }
+
+    log_entry = AuditLogEntry(
+        agent_name="merchant_risk_agent",
+        input_data=str(tx_payload),
+        output_data=str(merchant_output),
+        status=log_status(merchant_error, attempted_crewai),
+        latency_ms=int((perf_counter() - started) * 1000) + merchant_llm_ms,
+        error_message=merchant_error,
+        created_at=None,
+    )
+
+    return merchant_output, log_entry
+
+
+async def _run_device_fingerprint_agent(
+    tx: TransactionInput, tx_payload: dict, registry: dict, attempted_crewai: bool
+) -> tuple[dict, AuditLogEntry]:
+    """Device Fingerprint Agent - 设备指纹分析"""
+    started = perf_counter()
+    local_device_result = build_device_fingerprint_result(tx)
+
+    device_payload, device_llm_ms, device_error = await run_crewai_json_task_async(
+        registry["device_fingerprint_agent"],
+        {"transaction": tx_payload},
+    )
+    device_result = parse_device_fingerprint_result(device_payload)
+    if device_payload and device_result is None:
+        device_error = device_error or "CrewAI payload missing device fingerprint keys"
+
+    device_output = {
+        "backend": "crewai" if device_result else "local",
+        **(device_result or local_device_result),
+    }
+
+    log_entry = AuditLogEntry(
+        agent_name="device_fingerprint_agent",
+        input_data=str(tx_payload),
+        output_data=str(device_output),
+        status=log_status(device_error, attempted_crewai),
+        latency_ms=int((perf_counter() - started) * 1000) + device_llm_ms,
+        error_message=device_error,
+        created_at=None,
+    )
+
+    return device_output, log_entry
+
+
+async def _run_velocity_check_agent(
+    tx: TransactionInput, tx_payload: dict, registry: dict, attempted_crewai: bool
+) -> tuple[dict, AuditLogEntry]:
+    """Velocity Check Agent - 交易速度检查"""
+    started = perf_counter()
+    local_velocity_result = build_velocity_check_result(tx)
+
+    velocity_payload, velocity_llm_ms, velocity_error = await run_crewai_json_task_async(
+        registry["velocity_check_agent"],
+        {"transaction": tx_payload},
+    )
+    velocity_result = parse_velocity_check_result(velocity_payload)
+    if velocity_payload and velocity_result is None:
+        velocity_error = velocity_error or "CrewAI payload missing velocity check keys"
+
+    velocity_output = {
+        "backend": "crewai" if velocity_result else "local",
+        **(velocity_result or local_velocity_result),
+    }
+
+    log_entry = AuditLogEntry(
+        agent_name="velocity_check_agent",
+        input_data=str(tx_payload),
+        output_data=str(velocity_output),
+        status=log_status(velocity_error, attempted_crewai),
+        latency_ms=int((perf_counter() - started) * 1000) + velocity_llm_ms,
+        error_message=velocity_error,
+        created_at=None,
+    )
+
+    return velocity_output, log_entry
+
+
 async def _run_report_agent(
     tx_payload: dict,
     rule_result: dict,
@@ -267,11 +423,12 @@ async def _run_report_agent(
 
 async def run_audit_crew_async(tx: TransactionInput) -> AuditResponse:
     """
-    异步执行审计工作流（优化版）
+    异步执行审计工作流（优化版 + 新增4个Agent）
 
     优化点：
-    1. 并行执行 Risk Rule Agent 和 Compliance Agent
+    1. 并行执行多个独立的Agent
     2. 使用异步执行减少等待时间
+    3. 新增欺诈检测、商户风险、设备指纹、速度检查Agent
     """
     settings = get_settings()
     registry = build_agent_registry()
@@ -288,17 +445,31 @@ async def run_audit_crew_async(tx: TransactionInput) -> AuditResponse:
     # === 阶段2: 规则引擎评估（快速，同步）===
     rule_result = evaluate_risk(tx)
 
-    # === 阶段3: 并行执行 Risk Rule Agent 和 Compliance Agent ===
-    # 🚀 优化点：这两个 Agent 可以并行执行
+    # === 阶段3: 并行执行多个Agent ===
+    # 🚀 优化点：6个Agent可以并行执行
     rule_task = _run_risk_rule_agent(tx, tx_payload, rule_result, registry, attempted_crewai)
     compliance_task = _run_compliance_agent(tx, tx_payload, rule_result, registry, attempted_crewai)
+    fraud_task = _run_fraud_detection_agent(tx, tx_payload, registry, attempted_crewai)
+    merchant_task = _run_merchant_risk_agent(tx, tx_payload, registry, attempted_crewai)
+    device_task = _run_device_fingerprint_agent(tx, tx_payload, registry, attempted_crewai)
+    velocity_task = _run_velocity_check_agent(tx, tx_payload, registry, attempted_crewai)
 
-    (rule_output, rule_log), (compliance_output, compliance_log) = await asyncio.gather(
+    (
+        (rule_output, rule_log),
+        (compliance_output, compliance_log),
+        (fraud_output, fraud_log),
+        (merchant_output, merchant_log),
+        (device_output, device_log),
+        (velocity_output, velocity_log),
+    ) = await asyncio.gather(
         rule_task,
-        compliance_task
+        compliance_task,
+        fraud_task,
+        merchant_task,
+        device_task,
+        velocity_task,
     )
-    logs.append(rule_log)
-    logs.append(compliance_log)
+    logs.extend([rule_log, compliance_log, fraud_log, merchant_log, device_log, velocity_log])
 
     # === 阶段4: RAG Evidence Agent ===
     evidence, evidence_summary, rag_output, rag_log = await _run_rag_agent(

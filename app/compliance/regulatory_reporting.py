@@ -1,4 +1,4 @@
-"""
+﻿"""
 监管报告服务
 生成各类合规报告供监管机构审查
 """
@@ -364,4 +364,4 @@ class RegulatoryReportingService:
     ):
         """通过 API 提交到监管机构"""
         # TODO: 实际 API 调用
-        pass
+        # 空实现

@@ -7,6 +7,10 @@ from app.agents.prompts import (
     REPORT_AGENT_PROMPT,
     RISK_RULE_AGENT_PROMPT,
     TRANSACTION_AGENT_PROMPT,
+    FRAUD_DETECTION_AGENT_PROMPT,
+    MERCHANT_RISK_AGENT_PROMPT,
+    DEVICE_FINGERPRINT_AGENT_PROMPT,
+    VELOCITY_CHECK_AGENT_PROMPT,
 )
 from app.config import Settings, get_settings
 
@@ -106,6 +110,38 @@ def build_agent_registry() -> dict[str, AgentSpec]:
             REPORT_AGENT_PROMPT,
             'Strict JSON with keys "summary" and "suggestion".',
             "final_report",
+        ),
+        (
+            "fraud_detection_agent",
+            "Fraud Detection Specialist",
+            "Identify fraud patterns and behavioral anomalies in transactions.",
+            FRAUD_DETECTION_AGENT_PROMPT,
+            'Strict JSON with keys "fraud_indicators", "anomaly_score", "fraud_type", "confidence".',
+            "fraud_detection_result",
+        ),
+        (
+            "merchant_risk_agent",
+            "Merchant Risk Analyst",
+            "Assess merchant reputation and identify high-risk merchant categories.",
+            MERCHANT_RISK_AGENT_PROMPT,
+            'Strict JSON with keys "merchant_risk_factors", "merchant_reputation_score", "high_risk_category", "recommendation".',
+            "merchant_risk_result",
+        ),
+        (
+            "device_fingerprint_agent",
+            "Device Security Analyst",
+            "Analyze device fingerprints and detect device-based fraud signals.",
+            DEVICE_FINGERPRINT_AGENT_PROMPT,
+            'Strict JSON with keys "device_risk_signals", "device_trust_score", "is_emulator", "is_vpn_proxy", "device_reputation".',
+            "device_fingerprint_result",
+        ),
+        (
+            "velocity_check_agent",
+            "Velocity Monitor",
+            "Detect velocity abuse patterns and transaction frequency anomalies.",
+            VELOCITY_CHECK_AGENT_PROMPT,
+            'Strict JSON with keys "velocity_violations", "velocity_risk_score", "burst_detected", "time_pattern_anomaly", "recommendation".',
+            "velocity_check_result",
         ),
     ]
 

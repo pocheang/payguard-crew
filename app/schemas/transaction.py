@@ -101,3 +101,70 @@ class TransactionInput(BaseModel):
         examples=["2026-06-23T10:30:00"],
         description="交易时间戳"
     )
+
+    # 可选字段：用于高级风控分析
+    device_id: str | None = Field(
+        default=None,
+        max_length=200,
+        examples=["device_abc123xyz"],
+        description="设备唯一标识符（用于设备指纹分析）"
+    )
+
+    ip_address: str | None = Field(
+        default=None,
+        max_length=45,
+        examples=["192.168.1.100"],
+        description="IP地址（支持IPv4和IPv6）"
+    )
+
+    user_agent: str | None = Field(
+        default=None,
+        max_length=500,
+        examples=["Mozilla/5.0 (Windows NT 10.0; Win64; x64)"],
+        description="用户代理字符串（浏览器指纹）"
+    )
+
+    transaction_frequency_24h: int | None = Field(
+        default=None,
+        ge=0,
+        le=10000,
+        examples=[45],
+        description="24小时内交易次数"
+    )
+
+    transaction_frequency_7d: int | None = Field(
+        default=None,
+        ge=0,
+        le=100000,
+        examples=[150],
+        description="7天内交易次数"
+    )
+
+    merchant_category: str | None = Field(
+        default=None,
+        max_length=100,
+        examples=["electronics", "crypto", "gambling"],
+        description="商户类别（用于高风险行业识别）"
+    )
+
+    is_cross_border: bool = Field(
+        default=False,
+        examples=[False],
+        description="是否跨境交易"
+    )
+
+    chargeback_history: int = Field(
+        default=0,
+        ge=0,
+        le=1000,
+        examples=[0],
+        description="历史退单次数"
+    )
+
+    @field_validator("amount")
+    @classmethod
+    def validate_amount(cls, v: float) -> float:
+        """验证交易金额精度（最多2位小数）"""
+        if round(v, 2) != v:
+            raise ValueError("交易金额最多支持2位小数")
+        return v

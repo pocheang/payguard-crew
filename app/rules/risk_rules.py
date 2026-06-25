@@ -69,6 +69,49 @@ def evaluate_risk(tx: TransactionInput) -> dict:
         )
         risk_score += 15
 
+    # R008: 欺诈模式检测 - 账户接管
+    if tx.device_status == "abnormal" and tx.ip_location_status == "abnormal":
+        triggered_rules.append(
+            _rule("R008", "account_takeover_pattern", "设备和IP同时异常，疑似账户接管", 30)
+        )
+        risk_score += 30
+
+    # R009: 卡测试检测 - 高频小额交易
+    if tx.transaction_frequency_1h > 10 and tx.amount < 100:
+        triggered_rules.append(
+            _rule("R009", "card_testing_pattern", "高频小额交易，疑似卡测试", 25)
+        )
+        risk_score += 25
+
+    # R010: 速度滥用 - 极高频率
+    if tx.transaction_frequency_1h > 20:
+        triggered_rules.append(
+            _rule("R010", "velocity_abuse", "1小时内交易超过20次，严重违反速度限制", 35)
+        )
+        risk_score += 35
+
+    # R011: 高风险商户行业 - 通过商户ID前缀识别
+    high_risk_prefixes = ["M999", "M888", "M777"]
+    if any(tx.merchant_id.startswith(prefix) for prefix in high_risk_prefixes):
+        triggered_rules.append(
+            _rule("R011", "high_risk_industry", "商户属于高风险行业（加密/博彩/成人）", 30)
+        )
+        risk_score += 30
+
+    # R012: 新账户速度滥用
+    if tx.account_age_days < 7 and tx.transaction_frequency_1h > 5:
+        triggered_rules.append(
+            _rule("R012", "new_account_velocity", "新账户高频交易，疑似批量欺诈", 25)
+        )
+        risk_score += 25
+
+    # R013: 大额交易频率异常
+    if tx.amount > 10000 and tx.transaction_frequency_1h > 3:
+        triggered_rules.append(
+            _rule("R013", "large_amount_frequency", "短时间内多笔大额交易", 30)
+        )
+        risk_score += 30
+
     risk_score = min(risk_score, 100)
 
     if risk_score >= 70:

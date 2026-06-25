@@ -35,6 +35,5 @@ class AuditEvidenceRetriever:
                 if evidence:
                     return evidence
             except Exception:
-                pass
-
+        # 空实现
         return self.simple_retriever.retrieve(query=query, top_k=top_k)

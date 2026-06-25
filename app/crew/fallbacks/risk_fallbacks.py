@@ -1,90 +1,7 @@
-"""
-审计 Fallback 逻辑 (LEGACY VERSION - 255 lines)
-
-⚠️ DEPRECATION NOTICE:
-This is the original monolithic fallback implementation.
-
-For new code, please use the modular version:
-- app/crew/fallbacks/core_fallbacks.py (for core agents)
-- app/crew/fallbacks/risk_fallbacks.py (for risk detection agents)
-
-Benefits:
-- Better organization by agent category
-- Easier to locate specific fallback logic
-- Smaller files (~100 lines each)
-- Same functionality
-
-This file is kept for backward compatibility only.
-Planned removal: v0.2.0
-
-Migration Guide: See docs/MIGRATION_GUIDE.md
-
----
-当 LLM 不可用时使用的本地生成逻辑
+﻿"""
+Risk detection fallback functions - Fraud, Merchant, Device, Velocity
 """
 from app.schemas.transaction import TransactionInput
-
-
-def build_transaction_findings(tx: TransactionInput) -> list[str]:
-    """构建交易发现（本地逻辑）"""
-    findings: list[str] = []
-    if tx.account_age_days < 7:
-        findings.append("新账号处于观察期内。")
-    if tx.transaction_frequency_1h > 10:
-        findings.append("近 1 小时交易频次偏高。")
-    if tx.ip_location_status == "abnormal":
-        findings.append("IP 地理位置存在异常。")
-    if tx.device_status == "abnormal":
-        findings.append("设备状态异常。")
-    if tx.amount > 5000:
-        findings.append("本笔交易金额较高。")
-    if not findings:
-        findings.append("未发现明显行为异常。")
-    return findings
-
-
-def build_compliance_notes(tx: TransactionInput, rule_result: dict) -> list[str]:
-    """构建合规注释（本地逻辑）"""
-    notes: list[str] = []
-    if tx.kyc_status != "verified":
-        notes.append("KYC 未完成完全认证。")
-    if tx.is_blacklisted:
-        notes.append("命中黑名单，应直接拦截。")
-    if rule_result["requires_manual_review"]:
-        notes.append("规则结果要求进入人工复核。")
-    if not notes:
-        notes.append("合规侧未发现额外人工复核触发项。")
-    return notes
-
-
-def build_fallback_summary(
-    rule_result: dict,
-    transaction_findings: list[str],
-    compliance_notes: list[str],
-    evidence_summary: str | None,
-) -> str:
-    """构建后备摘要"""
-    rule_names = [rule["rule_name"] for rule in rule_result["triggered_rules"]]
-    joined_rules = "、".join(rule_names) if rule_names else "无明显高风险规则"
-    summary = (
-        f"规则引擎命中 {len(rule_names)} 条规则（{joined_rules}），"
-        f"交易特征包括：{'；'.join(transaction_findings)} "
-        f"合规观察：{'；'.join(compliance_notes)}"
-    )
-    if evidence_summary:
-        summary = f"{summary} 证据依据：{evidence_summary}"
-    return summary
-
-
-def build_fallback_suggestion(rule_result: dict) -> str:
-    """构建后备建议"""
-    if rule_result["decision"] == "reject":
-        return "建议拒绝交易并保留完整审计记录。"
-    if rule_result["risk_level"] == "high":
-        return "建议暂缓交易并转人工复核。"
-    if rule_result["risk_level"] == "medium":
-        return "建议进入人工复核或二次校验流程。"
-    return "建议自动通过，并保留基础审计记录。"
 
 
 def build_fraud_detection_result(tx: TransactionInput) -> dict:
@@ -145,8 +62,8 @@ def build_merchant_risk_result(tx: TransactionInput) -> dict:
         merchant_risk_factors.append("商户属于中风险类别")
         reputation_score += 20
 
-    # 高风险行业检测（通过merchant_id模式识别）
-    high_risk_merchant_prefixes = ["M999", "M888", "M777"]  # 模拟高风险商户ID前缀
+    # 高风险行业检测
+    high_risk_merchant_prefixes = ["M999", "M888", "M777"]
     if any(tx.merchant_id.startswith(prefix) for prefix in high_risk_merchant_prefixes):
         merchant_risk_factors.append("商户属于高风险行业（加密货币/博彩/成人内容）")
         reputation_score += 30
@@ -175,23 +92,20 @@ def build_merchant_risk_result(tx: TransactionInput) -> dict:
 def build_device_fingerprint_result(tx: TransactionInput) -> dict:
     """构建设备指纹结果（本地逻辑）"""
     device_risk_signals = []
-    trust_score = 100  # 从100开始递减
+    trust_score = 100
     is_emulator = False
     is_vpn_proxy = False
 
-    # 设备状态检测
     if tx.device_status == "abnormal":
         device_risk_signals.append("设备指纹异常：可能使用模拟器或篡改设备")
         trust_score -= 30
         is_emulator = True
 
-    # IP异常检测（可能是VPN/代理）
     if tx.ip_location_status == "abnormal":
         device_risk_signals.append("IP地址异常：疑似使用VPN或代理服务")
         trust_score -= 25
         is_vpn_proxy = True
 
-    # 设备-账户关联检测（模拟逻辑）
     if tx.transaction_frequency_1h > 10:
         device_risk_signals.append("设备关联多个账户：可能是批量欺诈行为")
         trust_score -= 20
@@ -199,15 +113,12 @@ def build_device_fingerprint_result(tx: TransactionInput) -> dict:
     if not device_risk_signals:
         device_risk_signals.append("设备指纹验证通过")
 
-    # 设备声誉评估
-    if trust_score >= 70:
-        device_reputation = "trusted"
-    elif trust_score >= 50:
-        device_reputation = "neutral"
-    elif trust_score >= 30:
-        device_reputation = "suspicious"
-    else:
-        device_reputation = "malicious"
+    device_reputation = (
+        "trusted" if trust_score >= 70
+        else "neutral" if trust_score >= 50
+        else "suspicious" if trust_score >= 30
+        else "malicious"
+    )
 
     return {
         "device_risk_signals": device_risk_signals,
@@ -225,7 +136,6 @@ def build_velocity_check_result(tx: TransactionInput) -> dict:
     burst_detected = False
     time_pattern_anomaly = False
 
-    # 1小时频率检查
     if tx.transaction_frequency_1h > 20:
         velocity_violations.append("严重违反1小时交易频率限制（>20次）")
         velocity_risk_score += 40
@@ -234,19 +144,15 @@ def build_velocity_check_result(tx: TransactionInput) -> dict:
         velocity_violations.append("超出1小时交易频率阈值（>10次）")
         velocity_risk_score += 25
 
-    # 金额速度检查
     if tx.amount > 10000 and tx.transaction_frequency_1h > 5:
         velocity_violations.append("大额交易频率异常：1小时内多笔大额交易")
         velocity_risk_score += 30
         burst_detected = True
 
-    # 新账户速度检查
     if tx.account_age_days < 7 and tx.transaction_frequency_1h > 5:
         velocity_violations.append("新账户交易频率过高：可能是批量注册欺诈")
         velocity_risk_score += 25
 
-    # 时间模式异常（假设凌晨交易为异常）
-    # 这里简化处理，实际应该解析timestamp
     if tx.transaction_frequency_1h > 15:
         velocity_violations.append("交易时间模式异常：非正常交易时段高频交易")
         time_pattern_anomaly = True

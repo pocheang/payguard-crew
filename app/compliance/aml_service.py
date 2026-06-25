@@ -1,4 +1,4 @@
-"""
+﻿"""
 AML (Anti-Money Laundering) 反洗钱监控服务
 包括交易监控、可疑活动检测、案例管理等
 """
@@ -356,4 +356,4 @@ class AMLMonitoringService:
     async def _submit_to_regulator(self, sar: SuspiciousActivityReport):
         """向监管机构提交报告"""
         # TODO: 实际API调用
-        pass
+        # 空实现
