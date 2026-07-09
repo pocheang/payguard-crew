@@ -787,7 +787,6 @@ OLLAMA_MODEL=qwen2.5
 | **Docker** | 容器化 |
 | **Docker Compose** | 编排 |
 | **Nginx** | 反向代理 |
-| **GitHub Actions** | CI/CD（可选） |
 
 ---
 
