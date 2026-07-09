@@ -1,0 +1,51 @@
+# Development Docker Compose Configuration
+# Usage: docker-compose -f docker-compose.dev.yml up
+
+version: '3.8'
+
+services:
+  # Backend with hot-reload
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: payguard-backend-dev
+    environment:
+      APP_ENV: development
+      DEBUG: "true"
+      DATABASE_TYPE: sqlite
+      DATABASE_URL: sqlite:///./data/payguard.db
+      JWT_SECRET_KEY: dev-secret-key-not-for-production
+      API_KEY_ADMIN: admin-key-12345
+      API_KEY_DEMO: demo-test-key-12345
+      LLM_PROVIDER: openai
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+    volumes:
+      - ./app:/app/app  # Hot reload for app code
+      - ./data:/app/data
+      - ./logs:/app/logs
+    ports:
+      - "8000:8000"
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - payguard-network-dev
+
+  # Frontend with Vite dev server
+  frontend-dev:
+    image: node:18-alpine
+    container_name: payguard-frontend-dev
+    working_dir: /app
+    environment:
+      NODE_ENV: development
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules  # Use container's node_modules
+    ports:
+      - "3000:3000"
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    networks:
+      - payguard-network-dev
+
+networks:
+  payguard-network-dev:
+    driver: bridge

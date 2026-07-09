@@ -23,14 +23,14 @@ async def lifespan(_: FastAPI):
 
     # 初始化数据库
     init_db()
-    print("✅ Database initialized")
+    print("[OK] Database initialized")
 
     # 初始化审核工作流表
     try:
         from app.db.schemas_review import init_review_tables
         init_review_tables()
     except Exception as e:
-        print(f"⚠️ Review tables initialization failed: {e}")
+        print(f"[WARN] Review tables initialization failed: {e}")
 
     # 生产环境安全检查
     if settings.is_production:
@@ -43,39 +43,39 @@ async def lifespan(_: FastAPI):
     try:
         from app.core.auth import validate_jwt_config
         validate_jwt_config()
-        print("✅ JWT configuration validated")
+        print("[OK] JWT configuration validated")
     except Exception as e:
-        print(f"⚠️ JWT configuration error: {e}")
+        print(f"[WARN] JWT configuration error: {e}")
 
     # 初始化结构化日志
     try:
         from app.core.logging import setup_logging
         setup_logging()
-        print("✅ Structured logging initialized")
+        print("[OK] Structured logging initialized")
     except Exception as e:
-        print(f"⚠️ Logging initialization failed: {e}")
+        print(f"[WARN] Logging initialization failed: {e}")
 
     # 初始化分布式追踪
     try:
         from app.core.tracing import setup_tracing
         setup_tracing(app)
     except Exception as e:
-        print(f"⚠️ Tracing initialization failed: {e}")
+        print(f"[WARN] Tracing initialization failed: {e}")
 
     # 初始化错误追踪
     try:
         from app.core.monitoring import setup_sentry
         setup_sentry(app)
     except Exception as e:
-        print(f"⚠️ Sentry initialization failed: {e}")
+        print(f"[WARN] Sentry initialization failed: {e}")
 
     # 预热ChromaDB
     try:
         from app.rag.vector_store import get_vector_store
         get_vector_store()
-        print("✅ ChromaDB warmed up")
+        print("[OK] ChromaDB warmed up")
     except Exception as e:
-        print(f"⚠️ ChromaDB warmup failed: {e}")
+        print(f"[WARN] ChromaDB warmup failed: {e}")
 
     yield
 
@@ -83,6 +83,6 @@ async def lifespan(_: FastAPI):
     try:
         from app.db.database_engine import close_db_connections
         close_db_connections()
-        print("✅ Database connections closed")
+        print("[OK] Database connections closed")
     except Exception:
         pass

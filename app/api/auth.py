@@ -19,7 +19,7 @@ from app.core.auth import (
     get_current_user,
 )
 
-router = APIRouter(prefix="/auth", tags=["authentication"])
+router = APIRouter(tags=["authentication"])
 security = HTTPBearer()
 
 
@@ -51,24 +51,31 @@ class UserCreateRequest(BaseModel):
 
 
 # Mock user database (replace with real database in production)
-MOCK_USERS = {
-    "admin": {
-        "user_id": "user_001",
-        "username": "admin",
-        "email": "admin@example.com",
-        "password_hash": get_password_hash("admin123"),
-        "roles": ["super_admin"],
-        "is_active": True,
-    },
-    "demo": {
-        "user_id": "user_002",
-        "username": "demo",
-        "email": "demo@example.com",
-        "password_hash": get_password_hash("demo123"),
-        "roles": ["analyst"],
-        "is_active": True,
-    }
-}
+# Lazy initialization to avoid bcrypt initialization issues
+_MOCK_USERS_CACHE = None
+
+def get_mock_users():
+    global _MOCK_USERS_CACHE
+    if _MOCK_USERS_CACHE is None:
+        _MOCK_USERS_CACHE = {
+            "admin": {
+                "user_id": "user_001",
+                "username": "admin",
+                "email": "admin@example.com",
+                "password_hash": get_password_hash("admin123"),
+                "roles": ["super_admin"],
+                "is_active": True,
+            },
+            "demo": {
+                "user_id": "user_002",
+                "username": "demo",
+                "email": "demo@example.com",
+                "password_hash": get_password_hash("demo123"),
+                "roles": ["analyst"],
+                "is_active": True,
+            }
+        }
+    return _MOCK_USERS_CACHE
 
 
 @router.post("/login", response_model=LoginResponse)
@@ -81,7 +88,7 @@ async def login(request: LoginRequest):
     - demo / demo123 (analyst role)
     """
     # Check if user exists
-    user_data = MOCK_USERS.get(request.username)
+    user_data = get_mock_users().get(request.username)
     if not user_data:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -139,7 +146,7 @@ async def refresh_token(request: RefreshRequest):
             )
 
         # Get user data (in production, fetch from database)
-        user_data = MOCK_USERS.get(token_data.username)
+        user_data = get_mock_users().get(token_data.username)
         if not user_data:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

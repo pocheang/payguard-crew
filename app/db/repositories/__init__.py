@@ -24,9 +24,12 @@ from app.db.repositories.rule_hit import (
 )
 
 # 导入优化的保存方法
-from app.db.database import get_connection, init_db
+from app.db.database import get_connection
 from app.schemas.audit import AuditLogEntry, AuditResponse
 from app.schemas.transaction import TransactionInput
+from app.utils.datetime_utils import now_iso
+from app.utils.json_utils import json_text
+from app.utils.db_utils import cleanup_transaction_data
 
 
 def save_audit_result_optimized(
@@ -44,18 +47,7 @@ def save_audit_result_optimized(
 
     性能提升：50-70%
     """
-    from datetime import datetime, timezone
-    import json
-
-    def _json_text(value):
-        if value is None:
-            return None
-        if isinstance(value, str):
-            return value
-        return json.dumps(value, ensure_ascii=False, default=str)
-
-    init_db()
-    created_at = datetime.now(timezone.utc).isoformat()
+    created_at = now_iso()
 
     # 单次事务完成所有写入
     with get_connection() as connection:
@@ -87,17 +79,14 @@ def save_audit_result_optimized(
         )
 
         # 2. 删除旧日志
-        connection.execute(
-            "DELETE FROM audit_logs WHERE transaction_id = ?",
-            (report.transaction_id,)
-        )
+        cleanup_transaction_data(connection, 'audit_logs', report.transaction_id)
 
         # 3. 批量插入日志
         if logs:
             log_data = [
                 (
                     report.transaction_id, log.agent_name,
-                    _json_text(log.input_data), _json_text(log.output_data),
+                    json_text(log.input_data), json_text(log.output_data),
                     log.status, log.latency_ms, log.error_message, log.created_at,
                 )
                 for log in logs
@@ -113,10 +102,7 @@ def save_audit_result_optimized(
             )
 
         # 4. 删除旧规则
-        connection.execute(
-            "DELETE FROM rule_hits WHERE transaction_id = ?",
-            (report.transaction_id,)
-        )
+        cleanup_transaction_data(connection, 'rule_hits', report.transaction_id)
 
         # 5. 批量插入规则
         if report.triggered_rules:

@@ -30,12 +30,12 @@ pytest-asyncio==0.24.0
 pytest-cov==5.0.0
 
 # AI Features (Optional)
-crewai==0.86.0
-langchain==0.3.1
-langchain-community==0.3.1
-langchain-openai==0.2.1
-chromadb==0.5.5
-openai==1.51.0
+crewai>=1.14.0
+langchain>=0.3.1
+langchain-community>=0.3.1
+langchain-openai>=0.2.1
+chromadb>=0.5.5
+openai>=1.51.0
 
 # Redis for production rate limiting
 redis==5.1.1

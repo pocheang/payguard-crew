@@ -3,19 +3,10 @@
 
 负责：audit_logs 表的增删改查
 """
-import json
-
 from app.db.database import get_connection, init_db
 from app.schemas.audit import AuditLogEntry, AuditLogResponse
-
-
-def _json_text(value: object | None) -> str | None:
-    """转换为JSON文本"""
-    if value is None:
-        return None
-    if isinstance(value, str):
-        return value
-    return json.dumps(value, ensure_ascii=False, default=str)
+from app.utils.json_utils import json_text
+from app.utils.db_utils import cleanup_transaction_data
 
 
 def save_audit_log(transaction_id: str, log: AuditLogEntry) -> None:
@@ -26,7 +17,6 @@ def save_audit_log(transaction_id: str, log: AuditLogEntry) -> None:
         transaction_id: 交易ID
         log: 日志条目
     """
-    init_db()
     with get_connection() as connection:
         connection.execute(
             """
@@ -38,8 +28,8 @@ def save_audit_log(transaction_id: str, log: AuditLogEntry) -> None:
             (
                 transaction_id,
                 log.agent_name,
-                _json_text(log.input_data),
-                _json_text(log.output_data),
+                json_text(log.input_data),
+                json_text(log.output_data),
                 log.status,
                 log.latency_ms,
                 log.error_message,
@@ -57,21 +47,17 @@ def save_audit_logs_batch(transaction_id: str, logs: list[AuditLogEntry]) -> Non
     if not logs:
         return
 
-    init_db()
     with get_connection() as connection:
         # 先删除旧日志
-        connection.execute(
-            "DELETE FROM audit_logs WHERE transaction_id = ?",
-            (transaction_id,)
-        )
+        cleanup_transaction_data(connection, 'audit_logs', transaction_id)
 
         # 批量插入
         log_data = [
             (
                 transaction_id,
                 log.agent_name,
-                _json_text(log.input_data),
-                _json_text(log.output_data),
+                json_text(log.input_data),
+                json_text(log.output_data),
                 log.status,
                 log.latency_ms,
                 log.error_message,
@@ -101,7 +87,6 @@ def get_audit_logs(transaction_id: str) -> AuditLogResponse:
     Returns:
         审计日志响应
     """
-    init_db()
     with get_connection() as connection:
         rows = connection.execute(
             """

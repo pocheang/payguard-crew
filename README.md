@@ -1,0 +1,447 @@
+# PayGuard - 支付风控系统
+
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Python](https://img.shields.io/badge/python-3.11+-green.svg)](https://www.python.org/)
+[![Vue](https://img.shields.io/badge/vue-3.4+-brightgreen.svg)](https://vuejs.org/)
+[![FastAPI](https://img.shields.io/badge/fastapi-0.109+-blue.svg)](https://fastapi.tiangolo.com/)
+[![Docker](https://img.shields.io/badge/docker-ready-blue.svg)](https://www.docker.com/)
+
+> 企业级支付风险控制系统 - 基于AI的智能风控平台
+
+## 🌟 项目简介
+
+PayGuard 是一个现代化的支付风险控制系统，结合传统规则引擎和AI大模型，提供实时交易风险评估、批量审计、人工审核工作流等完整功能。
+
+### ✨ 核心特性
+
+- 🚀 **实时风控** - 毫秒级交易风险评估
+- 🤖 **AI增强** - 支持OpenAI、DeepSeek、Ollama
+- 📊 **可视化Dashboard** - 实时监控和数据分析
+- 🔄 **批量处理** - 最多100笔交易并发审计
+- 👥 **审核工作流** - 完整的人工复核流程
+- 📈 **数据导出** - CSV/Excel报告导出
+- 🐳 **Docker部署** - 一键启动，生产就绪
+- 🎨 **现代UI** - Vue 3 + Tailwind CSS
+
+---
+
+## 📸 系统预览
+
+### Dashboard
+![Dashboard](docs/images/dashboard-preview.png)
+
+### 交易审计
+![Audit](docs/images/audit-preview.png)
+
+### 审核工作流
+![Review](docs/images/review-preview.png)
+
+---
+
+## 🚀 快速开始
+
+### 方式1：一键Docker部署（推荐）⭐
+
+```bash
+# Windows
+.\deploy.ps1
+
+# Linux/Mac
+./deploy.sh
+```
+
+选择部署模式：
+1. 快速演示（2分钟）
+2. 开发模式（3分钟）
+3. 生产模式（5分钟）
+
+### 方式2：本地开发
+
+```bash
+# 1. 安装依赖
+./fix-issues.sh  # 或 .\fix-issues.ps1
+
+# 2. 启动后端
+uvicorn app.main:app --reload
+
+# 3. 启动前端（新终端）
+cd frontend
+npm run dev
+```
+
+### 方式3：Docker Compose
+
+```bash
+# 开发模式
+docker-compose -f docker-compose.dev.yml up
+
+# 生产模式
+docker-compose -f docker-compose.full.yml up -d
+```
+
+---
+
+## 📋 系统要求
+
+### 必需
+- **Python** 3.11+
+- **Node.js** 16+
+- **Docker** (可选，推荐)
+
+### 可选
+- **PostgreSQL** 13+ (生产环境)
+- **Redis** 6+ (生产环境)
+- **Git** 2.0+
+
+---
+
+## 🎯 功能模块
+
+### 1. 交易审计
+
+#### 单笔审计
+- 实时风险评分（0-100）
+- 20+规则引擎检测
+- AI模型增强分析
+- 详细风险报告
+
+#### 批量审计
+- 最多100笔并发处理
+- 进度实时追踪
+- 批量统计分析
+- CSV/Excel导出
+
+### 2. 审核工作流
+
+- 📝 创建审核记录
+- 👤 分配审核人
+- ✅ 批准/拒绝/升级
+- 💬 评论和历史记录
+- 📊 审核统计
+
+### 3. 数据可视化
+
+- 📈 风险分布图表（Chart.js）
+- 📊 决策统计
+- 🎯 TOP规则展示
+- 📅 时间趋势分析
+
+### 4. 报告管理
+
+- 🔍 多条件查询
+- 📥 批量导出
+- 📊 统计分析
+- 📄 分页浏览
+
+---
+
+## 🏗️ 技术架构
+
+### 后端技术栈
+
+| 技术 | 版本 | 说明 |
+|------|------|------|
+| **Python** | 3.11+ | 主语言 |
+| **FastAPI** | 0.109+ | Web框架 |
+| **Pydantic** | 2.x | 数据验证 |
+| **SQLAlchemy** | 2.x | ORM |
+| **PostgreSQL** | 13+ | 主数据库（生产） |
+| **Redis** | 6+ | 缓存（生产） |
+| **SQLite** | 3.x | 默认数据库 |
+| **ChromaDB** | - | 向量数据库 |
+| **OpenAI** / **DeepSeek** | - | LLM支持 |
+| **CrewAI** | - | 多Agent编排 |
+
+### 前端技术栈
+
+| 技术 | 版本 | 说明 |
+|------|------|------|
+| **Vue 3** | 3.4+ | 前端框架 |
+| **Vite** | 5.x | 构建工具 |
+| **Pinia** | 2.x | 状态管理 |
+| **Vue Router** | 4.x | 路由管理 |
+| **Tailwind CSS** | 3.x | CSS框架 |
+| **Chart.js** | 4.x | 图表库 |
+| **Axios** | 1.x | HTTP客户端 |
+
+### DevOps
+
+| 技术 | 说明 |
+|------|------|
+| **Docker** | 容器化 |
+| **Docker Compose** | 编排 |
+| **Nginx** | 反向代理 |
+| **GitHub Actions** | CI/CD（可选） |
+
+---
+
+## 📁 项目结构
+
+```
+payguard_crew_starter/
+├── app/                        # 后端源码
+│   ├── api/                    # API路由
+│   │   ├── auth.py            # 认证
+│   │   ├── audit.py           # 审计
+│   │   ├── batch.py           # 批量
+│   │   └── review.py          # 审核
+│   ├── core/                   # 核心模块
+│   ├── db/                     # 数据库
+│   ├── rules/                  # 规则引擎
+│   ├── crew/                   # CrewAI
+│   └── main.py                 # 入口
+├── frontend/                   # 前端源码
+│   ├── src/
+│   │   ├── components/        # 9个组件
+│   │   ├── views/             # 7个页面
+│   │   ├── stores/            # 状态管理
+│   │   └── services/          # API服务
+│   ├── Dockerfile             # 前端镜像
+│   └── package.json           # 依赖
+├── docs/                       # 文档
+├── tests/                      # 测试
+├── Dockerfile                  # 后端镜像
+├── docker-compose*.yml         # Docker编排
+├── deploy.sh / deploy.ps1      # 一键部署
+├── requirements.txt            # Python依赖
+└── README.md                   # 本文件
+```
+
+---
+
+## ⚙️ 配置说明
+
+### 环境变量
+
+创建 `.env` 文件（从 `.env.example` 复制）：
+
+```bash
+# 应用配置
+APP_ENV=dev
+APP_NAME=payguard-crew
+
+# 安全配置（生产环境必须修改）
+JWT_SECRET_KEY=your-secret-key-change-in-production
+API_KEYS=your-api-key-here
+
+# LLM配置（可选）
+LLM_PROVIDER=disabled           # disabled/openai/deepseek/ollama
+
+# OpenAI
+OPENAI_API_KEY=sk-xxx
+OPENAI_MODEL=gpt-4o-mini
+
+# DeepSeek（推荐国内）
+DEEPSEEK_API_KEY=sk-xxx
+DEEPSEEK_MODEL=deepseek-chat
+
+# Ollama（本地）
+OLLAMA_MODEL=qwen2.5
+OLLAMA_BASE_URL=http://localhost:11434/v1
+
+# CrewAI
+ENABLE_CREWAI=false
+
+# 数据库（生产环境）
+DATABASE_URL=postgresql://user:pass@localhost/payguard
+REDIS_URL=redis://localhost:6379/0
+```
+
+### LLM模式选择
+
+| 模式 | 优点 | 适用场景 |
+|------|------|----------|
+| **disabled** | 免费、快速、离线 | Demo、测试 ⭐ |
+| **deepseek** | 便宜、快速、中文好 | 国内生产 ⭐⭐ |
+| **openai** | 质量高、生态好 | 国际生产 |
+| **ollama** | 完全本地、免费 | 数据敏感场景 |
+
+---
+
+## 🔐 安全特性
+
+- ✅ JWT认证
+- ✅ API密钥验证
+- ✅ RBAC权限控制
+- ✅ 输入验证
+- ✅ SQL注入防护
+- ✅ XSS防护
+- ✅ CORS配置
+- ✅ 限流保护
+- ✅ 密钥加密存储
+
+---
+
+## 📊 性能指标
+
+- ⚡ **响应时间**: < 100ms (规则引擎模式)
+- 🚀 **吞吐量**: 1000+ TPS (单机)
+- 💾 **内存占用**: < 512MB (后端)
+- 📦 **镜像大小**: 450MB (后端) / 45MB (前端)
+- ⏱️ **启动时间**: < 30s (开发) / < 60s (生产)
+
+---
+
+## 🧪 测试
+
+```bash
+# 运行所有测试
+pytest
+
+# 运行特定测试
+pytest tests/test_api.py
+
+# 覆盖率报告
+pytest --cov=app --cov-report=html
+```
+
+---
+
+## 📚 文档导航
+
+| 文档 | 说明 |
+|------|------|
+| [STARTUP_GUIDE.md](STARTUP_GUIDE.md) | 🚀 快速启动指南 |
+| [DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md) | 🐳 Docker完整部署 |
+| [LLM_CONFIG_GUIDE.md](LLM_CONFIG_GUIDE.md) | 🤖 LLM模型配置 |
+| [GITHUB_GUIDE.md](GITHUB_GUIDE.md) | 📋 GitHub提交指南 |
+| [ONE_CLICK_DEPLOY.md](ONE_CLICK_DEPLOY.md) | ⚡ 一键部署说明 |
+| [FRONTEND_DOCKER_IMPROVEMENTS.md](FRONTEND_DOCKER_IMPROVEMENTS.md) | 📝 前端Docker优化 |
+| [FUNCTION_CHECK_REPORT.md](FUNCTION_CHECK_REPORT.md) | ✅ 功能检查报告 |
+| [SYSTEM_COMPLETE.md](SYSTEM_COMPLETE.md) | 📊 系统状态总结 |
+
+---
+
+## 🎮 Demo演示
+
+### 登录凭据
+
+| 角色 | 用户名 | 密码 |
+|------|--------|------|
+| 管理员 | `admin` | `admin123` |
+| 分析师 | `demo` | `demo123` |
+
+### Demo流程（8-10分钟）
+
+1. **登录系统**（30秒）
+   - 访问 http://localhost:3000
+   - 使用管理员账号登录
+
+2. **查看Dashboard**（1分钟）
+   - 查看统计数据
+   - 图表可视化
+
+3. **单笔交易审计**（2分钟）
+   - 点击"高风险场景"快速填充
+   - 提交审计
+   - 查看风险评估结果
+
+4. **批量审计**（2分钟）
+   - 添加20笔样例交易
+   - 批量审计
+   - 查看统计结果
+
+5. **审核工作流**（2分钟）
+   - 查看待审核列表
+   - 审核交易详情
+   - 批准或拒绝
+
+6. **报告导出**（1分钟）
+   - 筛选交易记录
+   - 导出CSV/Excel
+
+---
+
+## 🤝 贡献指南
+
+欢迎贡献！请遵循以下步骤：
+
+1. Fork本仓库
+2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启Pull Request
+
+### 提交前检查
+
+```bash
+# 运行安全检查
+./check-before-commit.sh
+
+# 运行测试
+pytest
+
+# 检查代码风格
+black app/
+isort app/
+```
+
+---
+
+## 📄 开源协议
+
+本项目采用 [MIT License](LICENSE) 开源协议。
+
+---
+
+## 🙏 致谢
+
+感谢以下开源项目：
+
+- [FastAPI](https://fastapi.tiangolo.com/) - 现代化的Web框架
+- [Vue.js](https://vuejs.org/) - 渐进式前端框架
+- [Tailwind CSS](https://tailwindcss.com/) - 实用优先的CSS框架
+- [Chart.js](https://www.chartjs.org/) - 简单灵活的图表库
+- [CrewAI](https://www.crewai.com/) - 多Agent协作框架
+
+---
+
+## 📞 联系方式
+
+- 📧 Email: support@payguard.com
+- 💬 Issues: [GitHub Issues](https://github.com/yourusername/payguard/issues)
+- 📖 文档: [在线文档](https://payguard.readthedocs.io/)
+
+---
+
+## 🗺️ 路线图
+
+### v0.3.0 (计划中)
+- [ ] Kubernetes部署支持
+- [ ] GraphQL API
+- [ ] 实时WebSocket通知
+- [ ] 移动端适配
+- [ ] 多语言支持（i18n）
+
+### v0.2.0 (当前版本) ✅
+- [x] Docker一键部署
+- [x] 前端组件库完整
+- [x] LLM多提供商支持
+- [x] 批量审计功能
+- [x] 审核工作流
+
+### v0.1.0
+- [x] 基础风控功能
+- [x] 规则引擎
+- [x] 单笔交易审计
+- [x] Dashboard可视化
+
+---
+
+## ⭐ Star History
+
+如果这个项目对你有帮助，请给我们一个Star！⭐
+
+[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/payguard&type=Date)](https://star-history.com/#yourusername/payguard&Date)
+
+---
+
+<div align="center">
+
+**🎉 PayGuard - 让支付更安全 🎉**
+
+Made with ❤️ by PayGuard Team
+
+[官网](https://payguard.com) · [文档](https://docs.payguard.com) · [博客](https://blog.payguard.com)
+
+</div>

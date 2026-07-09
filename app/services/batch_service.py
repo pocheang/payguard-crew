@@ -7,13 +7,52 @@
 3. 查询统计分析
 """
 import asyncio
-from datetime import datetime, timezone
+import csv
+import logging
+from collections import Counter
 from typing import List
 
 from app.schemas.transaction import TransactionInput
-from app.schemas.audit import AuditResponse, AuditLogEntry
+from app.schemas.audit import AuditResponse
 from app.crew.audit_crew import run_audit_crew_async
-from app.db.repositories import save_audit_result_optimized
+from app.db.repositories import save_audit_result_optimized, get_audit_report
+
+logger = logging.getLogger(__name__)
+
+# 共享常量
+EXPORT_HEADERS = [
+    '交易ID', '用户ID', '商户ID',
+    '风险分数', '风险等级', '决策',
+    '触发规则数', '需要人工审核',
+    '创建时间', '摘要'
+]
+
+RISK_COLORS = {
+    'high': 'FFCCCC',
+    'medium': 'FFFFCC',
+    'low': 'CCFFCC'
+}
+
+
+def _truncate_text(text: str, max_length: int = 100) -> str:
+    """截断文本并添加省略号"""
+    return text[:max_length] + '...' if len(text) > max_length else text
+
+
+def _extract_report_row(report) -> list:
+    """提取报告数据为行数据（复用于CSV和Excel）"""
+    return [
+        report.transaction_id,
+        report.user_id,
+        report.merchant_id,
+        report.risk_score,
+        report.risk_level,
+        report.decision,
+        len(report.triggered_rules),
+        '是' if report.requires_manual_review else '否',
+        report.created_at,
+        _truncate_text(report.summary)
+    ]
 
 
 async def batch_audit_transactions(
@@ -44,8 +83,7 @@ async def batch_audit_transactions(
                 return result
             except Exception as e:
                 # 单个失败不影响其他
-                import logging
-                logging.error(f"Batch audit failed for {tx.transaction_id}: {e}")
+                logger.error(f"Batch audit failed for {tx.transaction_id}: {e}")
                 return None
 
     # 并发执行
@@ -70,36 +108,15 @@ def export_audit_reports_csv(
     Returns:
         导出的文件路径
     """
-    import csv
-    from app.db.repositories import get_audit_report
-
     with open(output_path, 'w', newline='', encoding='utf-8-sig') as f:
         writer = csv.writer(f)
-
-        # 写入表头
-        writer.writerow([
-            '交易ID', '用户ID', '商户ID',
-            '风险分数', '风险等级', '决策',
-            '触发规则数', '需要人工审核',
-            '创建时间', '摘要'
-        ])
+        writer.writerow(EXPORT_HEADERS)
 
         # 写入数据
         for tx_id in transaction_ids:
             report = get_audit_report(tx_id)
             if report:
-                writer.writerow([
-                    report.transaction_id,
-                    report.user_id,
-                    report.merchant_id,
-                    report.risk_score,
-                    report.risk_level,
-                    report.decision,
-                    len(report.triggered_rules),
-                    '是' if report.requires_manual_review else '否',
-                    report.created_at,
-                    report.summary[:100] + '...' if len(report.summary) > 100 else report.summary
-                ])
+                writer.writerow(_extract_report_row(report))
 
     return output_path
 
@@ -126,8 +143,6 @@ def export_audit_reports_excel(
             "Excel export requires openpyxl. Install with: pip install openpyxl"
         )
 
-    from app.db.repositories import get_audit_report
-
     wb = Workbook()
     ws = wb.active
     ws.title = "审计报告"
@@ -137,11 +152,7 @@ def export_audit_reports_excel(
     header_font = Font(color="FFFFFF", bold=True)
 
     # 写入表头
-    headers = [
-        '交易ID', '用户ID', '商户ID', '风险分数', '风险等级',
-        '决策', '触发规则数', '需要人工审核', '创建时间', '摘要'
-    ]
-    for col, header in enumerate(headers, 1):
+    for col, header in enumerate(EXPORT_HEADERS, 1):
         cell = ws.cell(row=1, column=col, value=header)
         cell.fill = header_fill
         cell.font = header_font
@@ -151,25 +162,8 @@ def export_audit_reports_excel(
     for row_idx, tx_id in enumerate(transaction_ids, 2):
         report = get_audit_report(tx_id)
         if report:
-            # 风险等级颜色标记
-            risk_color = {
-                'high': 'FFCCCC',
-                'medium': 'FFFFCC',
-                'low': 'CCFFCC'
-            }.get(report.risk_level, 'FFFFFF')
-
-            data = [
-                report.transaction_id,
-                report.user_id,
-                report.merchant_id,
-                report.risk_score,
-                report.risk_level,
-                report.decision,
-                len(report.triggered_rules),
-                '是' if report.requires_manual_review else '否',
-                report.created_at,
-                report.summary[:100] + '...' if len(report.summary) > 100 else report.summary
-            ]
+            data = _extract_report_row(report)
+            risk_color = RISK_COLORS.get(report.risk_level, 'FFFFFF')
 
             for col, value in enumerate(data, 1):
                 cell = ws.cell(row=row_idx, column=col, value=value)
@@ -209,18 +203,14 @@ def get_audit_statistics(
         统计信息字典
     """
     from app.db.database import get_connection
+    from app.utils.query_builder import QueryBuilder
 
     with get_connection() as conn:
-        # 基础查询
-        query = "SELECT * FROM audit_reports WHERE 1=1"
-        params = []
-
-        if start_date:
-            query += " AND created_at >= ?"
-            params.append(start_date)
-        if end_date:
-            query += " AND created_at <= ?"
-            params.append(end_date)
+        # 使用QueryBuilder构建查询
+        builder = QueryBuilder("audit_reports")
+        builder.add_filter("created_at", start_date, ">=")
+        builder.add_filter("created_at", end_date, "<=")
+        query, params = builder.build()
 
         reports = conn.execute(query, params).fetchall()
 
@@ -233,28 +223,12 @@ def get_audit_statistics(
                 "manual_review_rate": 0,
             }
 
-        # 统计
+        # 使用Counter统计分布
         total = len(reports)
-        risk_levels = {}
-        decisions = {}
-        total_score = 0
-        manual_review_count = 0
-
-        for report in reports:
-            # 风险等级分布
-            level = report['risk_level']
-            risk_levels[level] = risk_levels.get(level, 0) + 1
-
-            # 决策分布
-            decision = report['decision']
-            decisions[decision] = decisions.get(decision, 0) + 1
-
-            # 分数
-            total_score += report['risk_score']
-
-            # 人工审核
-            if report['requires_manual_review']:
-                manual_review_count += 1
+        risk_levels = Counter(report['risk_level'] for report in reports)
+        decisions = Counter(report['decision'] for report in reports)
+        total_score = sum(report['risk_score'] for report in reports)
+        manual_review_count = sum(1 for report in reports if report['requires_manual_review'])
 
         # 获取最常触发的规则
         rule_stats = conn.execute("""

@@ -1,8 +1,45 @@
-# Python
+# ============================================
+# PayGuard .gitignore - GitHub提交规则
+# ============================================
+
+# ==================== 敏感信息（绝对不提交）====================
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+*.env.backup
+
+# 只保留示例文件
+!.env.example
+!frontend/.env.example
+
+# 数据库文件
+*.db
+*.sqlite
+*.sqlite3
+payguard_crew.db
+data/**/*.db
+
+# 日志文件
+logs/
+*.log
+app.log
+error.log
+
+# 向量数据库
+.chroma/
+chroma_db/
+*.index
+chroma.sqlite3
+
+# ==================== Python ====================
+# 字节码
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
+
+# 分发/打包
 .Python
 build/
 develop-eggs/
@@ -19,57 +56,151 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+*.whl
 
-# Virtual environments
+# 虚拟环境
 venv/
 env/
 ENV/
 .venv
 
-# IDE
-.vscode/
+# 测试和覆盖率
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.hypothesis/
+coverage.xml
+*.cover
+.ruff_cache/
+
+# MyPy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# ==================== Node.js ====================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.npm
+.eslintcache
+.node_repl_history
+
+# ==================== 前端构建产物 ====================
+frontend/dist/
+frontend/build/
+frontend/.cache/
+
+# ==================== IDE 和编辑器 ====================
+# VS Code
+.vscode/*
+!.vscode/extensions.json
+!.vscode/launch.json
+!.vscode/settings.json.example
+
+# PyCharm
 .idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
 *.swp
 *.swo
 *~
+.*.swp
 
-# Testing
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.mypy_cache/
-.ruff_cache/
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
 
-# Environment variables
-.env
-.env.local
-.env.*.local
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-payguard_crew.db
-
-# Logs
-*.log
-logs/
-
-# ChromaDB
-.chroma/
-chroma.sqlite3
-
-# OS
+# ==================== 操作系统 ====================
+# macOS
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
 Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
 
-# Docker
-.dockerignore
+# Linux
+*~
+.directory
+.Trash-*
 
-# Temporary files
+# ==================== 临时文件 ====================
 *.tmp
+*.temp
 *.bak
-*.swp
+*.backup
+*.old
+*.orig
 tmp/
 temp/
+
+# ==================== Docker ====================
+# 保留 Docker 配置文件
+!Dockerfile
+!docker-compose*.yml
+!.dockerignore
+
+# Docker 数据卷
+.docker-data/
+
+# ==================== Jupyter Notebook ====================
+.ipynb_checkpoints
+*.ipynb
+
+# ==================== 其他 ====================
+# SSL 证书和密钥
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+
+# 压缩文件
+*.zip
+*.tar
+*.gz
+*.rar
+*.7z
+
+# 数据文件（大文件）
+*.csv
+*.xlsx
+!package.json
+!package-lock.json
+!tsconfig.json
+
+# 媒体文件
+*.mp4
+*.avi
+*.mov
+*.mp3
+*.wav
+
+# 保留必要的空目录
+!data/.gitkeep
+!logs/.gitkeep

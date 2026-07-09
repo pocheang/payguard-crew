@@ -4,6 +4,7 @@
 负责：rule_hits 表的增删改查
 """
 from app.db.database import get_connection, init_db
+from app.utils.db_utils import cleanup_transaction_data, rows_to_dicts
 
 
 def save_rule_hits(transaction_id: str, rules: list[dict]) -> None:
@@ -19,13 +20,9 @@ def save_rule_hits(transaction_id: str, rules: list[dict]) -> None:
     if not rules:
         return
 
-    init_db()
     with get_connection() as connection:
         # 先删除旧记录
-        connection.execute(
-            "DELETE FROM rule_hits WHERE transaction_id = ?",
-            (transaction_id,)
-        )
+        cleanup_transaction_data(connection, 'rule_hits', transaction_id)
 
         # 批量插入
         rule_data = [
@@ -59,7 +56,6 @@ def get_rule_hits(transaction_id: str) -> list[dict]:
     Returns:
         规则列表
     """
-    init_db()
     with get_connection() as connection:
         rows = connection.execute(
             """

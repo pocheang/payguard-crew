@@ -16,6 +16,7 @@ from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 
 from app.auth.api_key import verify_api_key
+from app.api.error_handler import api_error_handler
 from app.schemas.transaction import TransactionInput
 from app.schemas.audit import AuditResponse
 from app.services.batch_service import (
@@ -95,6 +96,7 @@ async def batch_audit(
 
 
 @router.get("/export/csv")
+@api_error_handler
 def export_csv(
     transaction_ids: List[str] = Query(..., description="交易ID列表"),
     api_key: str = Security(verify_api_key)
@@ -113,27 +115,25 @@ def export_csv(
     if len(transaction_ids) > 1000:
         raise HTTPException(status_code=400, detail="单次最多导出1000条记录")
 
-    try:
-        # 生成临时文件
-        import tempfile
-        import os
-        fd, temp_path = tempfile.mkstemp(suffix='.csv')
-        os.close(fd)
+    # 生成临时文件
+    import tempfile
+    import os
+    fd, temp_path = tempfile.mkstemp(suffix='.csv')
+    os.close(fd)
 
-        # 导出
-        output_path = export_audit_reports_csv(transaction_ids, temp_path)
+    # 导出
+    output_path = export_audit_reports_csv(transaction_ids, temp_path)
 
-        # 返回文件
-        return FileResponse(
-            path=output_path,
-            filename=f"audit_reports_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-            media_type="text/csv"
-        )
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"导出失败: {str(e)}")
+    # 返回文件
+    return FileResponse(
+        path=output_path,
+        filename=f"audit_reports_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+        media_type="text/csv"
+    )
 
 
 @router.get("/export/excel")
+@api_error_handler
 def export_excel(
     transaction_ids: List[str] = Query(..., description="交易ID列表"),
     api_key: str = Security(verify_api_key)
@@ -181,6 +181,7 @@ def export_excel(
 
 
 @router.get("/statistics")
+@api_error_handler
 def get_statistics(
     start_date: str = Query(None, description="开始日期 (ISO格式: 2026-01-01)"),
     end_date: str = Query(None, description="结束日期 (ISO格式: 2026-12-31)"),
@@ -201,14 +202,12 @@ def get_statistics(
     GET /api/v1/audit/statistics
     GET /api/v1/audit/statistics?start_date=2026-01-01&end_date=2026-12-31
     """
-    try:
-        stats = get_audit_statistics(start_date, end_date)
-        return stats
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"统计失败: {str(e)}")
+    stats = get_audit_statistics(start_date, end_date)
+    return stats
 
 
 @router.get("/list")
+@api_error_handler
 def list_audit_reports(
     limit: int = Query(default=100, ge=1, le=1000, description="返回数量"),
     offset: int = Query(default=0, ge=0, description="偏移量"),
@@ -226,44 +225,27 @@ def list_audit_reports(
     GET /api/v1/audit/list?risk_level=high&decision=reject
     """
     from app.db.database import get_connection
+    from app.utils.query_builder import QueryBuilder
+    from app.utils.db_utils import rows_to_dicts
 
-    try:
-        with get_connection() as conn:
-            # 构建查询
-            query = "SELECT * FROM audit_reports WHERE 1=1"
-            params = []
+    with get_connection() as conn:
+        # 使用QueryBuilder构建查询
+        builder = QueryBuilder("audit_reports")
+        builder.add_filter("risk_level", risk_level)
+        builder.add_filter("decision", decision)
+        builder.add_order_by("created_at", "DESC")
+        builder.add_limit(limit, offset)
 
-            if risk_level:
-                query += " AND risk_level = ?"
-                params.append(risk_level)
+        query, params = builder.build()
+        rows = conn.execute(query, params).fetchall()
 
-            if decision:
-                query += " AND decision = ?"
-                params.append(decision)
+        # 获取总数
+        count_query, count_params = builder.get_count_query()
+        total = conn.execute(count_query, count_params).fetchone()['count']
 
-            # 排序和分页
-            query += " ORDER BY created_at DESC LIMIT ? OFFSET ?"
-            params.extend([limit, offset])
-
-            rows = conn.execute(query, params).fetchall()
-
-            # 获取总数
-            count_query = "SELECT COUNT(*) as count FROM audit_reports WHERE 1=1"
-            count_params = []
-            if risk_level:
-                count_query += " AND risk_level = ?"
-                count_params.append(risk_level)
-            if decision:
-                count_query += " AND decision = ?"
-                count_params.append(decision)
-
-            total = conn.execute(count_query, count_params).fetchone()['count']
-
-            return {
-                "total": total,
-                "limit": limit,
-                "offset": offset,
-                "items": [dict(row) for row in rows]
-            }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"查询失败: {str(e)}")
+        return {
+            "total": total,
+            "limit": limit,
+            "offset": offset,
+            "items": rows_to_dicts(rows)
+        }

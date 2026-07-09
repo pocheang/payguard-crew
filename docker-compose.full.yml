@@ -1,0 +1,146 @@
+version: '3.8'
+
+services:
+  # PostgreSQL数据库
+  postgres:
+    image: postgres:15-alpine
+    container_name: payguard-postgres
+    environment:
+      POSTGRES_DB: payguard
+      POSTGRES_USER: payguard
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-payguard_secure_2024}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    networks:
+      - payguard-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U payguard"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: payguard-redis
+    command: redis-server --requirepass ${REDIS_PASSWORD:-redis_secure_2024}
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - payguard-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # 后端服务
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - BUILD_DATE=${BUILD_DATE:-2024-01-01}
+        - VERSION=${VERSION:-0.2.0}
+    image: payguard-backend:latest
+    container_name: payguard-backend
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./docs:/app/docs
+      - ./logs:/app/logs
+    environment:
+      # 应用配置
+      - APP_NAME=payguard-crew
+      - APP_ENV=production
+      - APP_VERSION=${VERSION:-0.2.0}
+
+      # 数据库配置
+      - DATABASE_URL=postgresql://payguard:${POSTGRES_PASSWORD:-payguard_secure_2024}@postgres:5432/payguard
+      - REDIS_URL=redis://:${REDIS_PASSWORD:-redis_secure_2024}@redis:6379/0
+
+      # JWT配置
+      - JWT_SECRET_KEY=${JWT_SECRET_KEY:-change-this-in-production-super-secret-key-2024}
+      - JWT_ALGORITHM=HS256
+      - JWT_EXPIRE_MINUTES=30
+
+      # API密钥
+      - API_KEYS=${API_KEYS:-demo-api-key-2024}
+
+      # LLM配置
+      - LLM_PROVIDER=${LLM_PROVIDER:-disabled}
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY:-}
+      - DEEPSEEK_MODEL=${DEEPSEEK_MODEL:-deepseek-chat}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - OPENAI_MODEL=${OPENAI_MODEL:-gpt-4o-mini}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-qwen2.5}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-http://host.docker.internal:11434/v1}
+
+      # CrewAI配置
+      - ENABLE_CREWAI=${ENABLE_CREWAI:-false}
+
+      # RAG配置
+      - RAG_TOP_K=${RAG_TOP_K:-3}
+      - PAYGUARD_DOCS_DIR=/app/docs
+
+      # 限流配置
+      - RATE_LIMIT_ENABLED=true
+      - RATE_LIMIT_PER_MINUTE=100
+
+      # 日志配置
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+    networks:
+      - payguard-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    restart: unless-stopped
+
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=${VITE_API_URL:-http://localhost:8000}
+    image: payguard-frontend:latest
+    container_name: payguard-frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - payguard-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+
+networks:
+  payguard-network:
+    driver: bridge

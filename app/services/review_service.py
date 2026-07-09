@@ -7,11 +7,11 @@
 3. 添加评论
 4. 审核历史
 """
-from datetime import datetime, timezone
 from typing import List, Optional
 from enum import Enum
 
 from app.db.database import get_connection
+from app.utils.datetime_utils import now_iso
 
 
 class ReviewStatus(str, Enum):
@@ -43,10 +43,6 @@ STATUS_TRANSITIONS = {
 }
 
 
-def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
-
-
 def create_review_record(
     transaction_id: str,
     priority: str = "normal",
@@ -63,7 +59,7 @@ def create_review_record(
     Returns:
         创建的审核记录
     """
-    now = _now_iso()
+    now = now_iso()
 
     with get_connection() as conn:
         conn.execute(
@@ -126,7 +122,7 @@ def update_review_status(
             f"允许的状态: {STATUS_TRANSITIONS[current_status]}"
         )
 
-    now = _now_iso()
+    now = now_iso()
 
     with get_connection() as conn:
         # 更新状态
@@ -171,7 +167,7 @@ def assign_reviewer(
     Returns:
         更新后的审核记录
     """
-    now = _now_iso()
+    now = now_iso()
 
     with get_connection() as conn:
         conn.execute(
@@ -214,7 +210,7 @@ def add_comment(
     Returns:
         添加的评论
     """
-    now = _now_iso()
+    now = now_iso()
 
     with get_connection() as conn:
         cursor = conn.execute(

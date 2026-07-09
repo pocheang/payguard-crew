@@ -3,16 +3,10 @@
 
 负责：audit_reports 表的增删改查
 """
-from datetime import datetime, timezone
-
 from app.db.database import get_connection, init_db
 from app.schemas.audit import AuditReportRecord, AuditResponse
 from app.schemas.transaction import TransactionInput
-
-
-def _now_iso() -> str:
-    """获取当前UTC时间的ISO格式"""
-    return datetime.now(timezone.utc).isoformat()
+from app.utils.datetime_utils import now_iso
 
 
 def save_audit_report(tx: TransactionInput, report: AuditResponse) -> None:
@@ -23,8 +17,7 @@ def save_audit_report(tx: TransactionInput, report: AuditResponse) -> None:
         tx: 交易输入
         report: 审计响应
     """
-    init_db()
-    created_at = _now_iso()
+    created_at = now_iso()
 
     with get_connection() as connection:
         connection.execute(
@@ -67,7 +60,6 @@ def get_audit_report(transaction_id: str) -> AuditReportRecord | None:
 
     优化：在单次连接中查询所有数据
     """
-    init_db()
     with get_connection() as connection:
         report_row = connection.execute(
             """

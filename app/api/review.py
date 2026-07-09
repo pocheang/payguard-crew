@@ -15,6 +15,7 @@ from pydantic import BaseModel, Field
 
 from fastapi import APIRouter, HTTPException, Security, Query
 from app.auth.api_key import verify_api_key
+from app.api.error_handler import api_error_handler
 from app.services.review_service import (
     ReviewStatus,
     ReviewPriority,
@@ -27,6 +28,7 @@ from app.services.review_service import (
     list_pending_reviews,
     get_review_statistics,
 )
+from app.utils.response import success_response
 
 router = APIRouter(tags=["review-workflow"])
 
@@ -58,6 +60,7 @@ class CommentRequest(BaseModel):
 
 
 @router.post("/create")
+@api_error_handler
 def create_review(
     request: CreateReviewRequest,
     api_key: str = Security(verify_api_key)
@@ -77,18 +80,16 @@ def create_review(
       "assigned_to": "reviewer01"
     }
     """
-    try:
-        record = create_review_record(
-            transaction_id=request.transaction_id,
-            priority=request.priority,
-            assigned_to=request.assigned_to
-        )
-        return {"success": True, "data": record}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    record = create_review_record(
+        transaction_id=request.transaction_id,
+        priority=request.priority,
+        assigned_to=request.assigned_to
+    )
+    return success_response(record)
 
 
 @router.post("/{transaction_id}/status")
+@api_error_handler
 def update_status(
     transaction_id: str,
     request: UpdateStatusRequest,
@@ -113,21 +114,17 @@ def update_status(
       "comment": "验证通过，风险可控"
     }
     """
-    try:
-        record = update_review_status(
-            transaction_id=transaction_id,
-            new_status=request.status,
-            reviewer=request.reviewer,
-            comment=request.comment
-        )
-        return {"success": True, "data": record}
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    record = update_review_status(
+        transaction_id=transaction_id,
+        new_status=request.status,
+        reviewer=request.reviewer,
+        comment=request.comment
+    )
+    return success_response(record)
 
 
 @router.post("/{transaction_id}/assign")
+@api_error_handler
 def assign_review(
     transaction_id: str,
     request: AssignRequest,
@@ -143,18 +140,16 @@ def assign_review(
       "assigner": "manager01"
     }
     """
-    try:
-        record = assign_reviewer(
-            transaction_id=transaction_id,
-            assigned_to=request.assigned_to,
-            assigner=request.assigner
-        )
-        return {"success": True, "data": record}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    record = assign_reviewer(
+        transaction_id=transaction_id,
+        assigned_to=request.assigned_to,
+        assigner=request.assigner
+    )
+    return success_response(record)
 
 
 @router.post("/{transaction_id}/comment")
+@api_error_handler
 def add_review_comment(
     transaction_id: str,
     request: CommentRequest,
@@ -170,18 +165,16 @@ def add_review_comment(
       "comment": "需要补充KYC材料"
     }
     """
-    try:
-        comment = add_comment(
-            transaction_id=transaction_id,
-            user_id=request.user_id,
-            comment=request.comment
-        )
-        return {"success": True, "data": comment}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    comment = add_comment(
+        transaction_id=transaction_id,
+        user_id=request.user_id,
+        comment=request.comment
+    )
+    return success_response(comment)
 
 
 @router.get("/{transaction_id}")
+@api_error_handler
 def get_review_detail(
     transaction_id: str,
     api_key: str = Security(verify_api_key)
@@ -192,27 +185,23 @@ def get_review_detail(
     示例：
     GET /api/v1/review/TX001
     """
-    try:
-        record = get_review_record(transaction_id)
-        if not record:
-            raise HTTPException(status_code=404, detail="审核记录不存在")
+    record = get_review_record(transaction_id)
+    if not record:
+        raise HTTPException(status_code=404, detail="审核记录不存在")
 
-        comments = get_comments(transaction_id)
+    comments = get_comments(transaction_id)
 
-        return {
-            "success": True,
-            "data": {
-                "record": record,
-                "comments": comments
-            }
+    return {
+        "success": True,
+        "data": {
+            "record": record,
+            "comments": comments
         }
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    }
 
 
 @router.get("/pending")
+@api_error_handler
 def get_pending_reviews(
     assigned_to: Optional[str] = Query(None, description="筛选分配人"),
     priority: Optional[str] = Query(None, description="筛选优先级"),
@@ -231,22 +220,20 @@ def get_pending_reviews(
     GET /api/v1/review/pending?assigned_to=reviewer01
     GET /api/v1/review/pending?priority=high
     """
-    try:
-        reviews = list_pending_reviews(
-            assigned_to=assigned_to,
-            priority=priority,
-            limit=limit
-        )
-        return {
-            "success": True,
-            "total": len(reviews),
-            "data": reviews
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    reviews = list_pending_reviews(
+        assigned_to=assigned_to,
+        priority=priority,
+        limit=limit
+    )
+    return {
+        "success": True,
+        "total": len(reviews),
+        "data": reviews
+    }
 
 
 @router.get("/statistics")
+@api_error_handler
 def get_review_stats(
     api_key: str = Security(verify_api_key)
 ):
@@ -261,8 +248,5 @@ def get_review_stats(
     示例：
     GET /api/v1/review/statistics
     """
-    try:
-        stats = get_review_statistics()
-        return {"success": True, "data": stats}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    stats = get_review_statistics()
+    return success_response(stats)
