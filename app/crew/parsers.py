@@ -1,15 +1,28 @@
 """
-审计结果解析器
+审计结果解析器（增强版，带Schema验证）
 """
 from typing import Any
+import logging
+
+from app.crew.schemas import AGENT_SCHEMAS
+from app.crew.schemas.validator import validate_agent_output
+
+logger = logging.getLogger(__name__)
 
 JSONDict = dict[str, Any]
 
 
 def parse_transaction_findings(payload: JSONDict | None) -> dict[str, Any] | None:
-    """解析交易发现结果"""
+    """解析交易发现结果（带Schema验证）"""
     if not payload:
         return None
+
+    # 🔧 Schema验证
+    is_valid, error_msg = validate_agent_output("transaction_agent", payload, AGENT_SCHEMAS.get("transaction_agent"))
+    if not is_valid:
+        logger.warning(f"Transaction agent output validation failed: {error_msg}")
+        return None
+
     risk_points = payload.get("risk_points")
     behavior_summary = payload.get("behavior_summary")
     if not isinstance(risk_points, list) or not all(
@@ -25,9 +38,16 @@ def parse_transaction_findings(payload: JSONDict | None) -> dict[str, Any] | Non
 
 
 def parse_rule_explanation(payload: JSONDict | None) -> str | None:
-    """解析规则解释"""
+    """解析规则解释（带Schema验证）"""
     if not payload:
         return None
+
+    # 🔧 新增：Schema验证
+    is_valid, error_msg = validate_agent_output("risk_rule_agent", payload)
+    if not is_valid:
+        logger.warning(f"Risk rule agent output validation failed: {error_msg}")
+        return None
+
     explanation = payload.get("rule_explanation")
     if not isinstance(explanation, str) or not explanation.strip():
         return None
@@ -35,9 +55,16 @@ def parse_rule_explanation(payload: JSONDict | None) -> str | None:
 
 
 def parse_compliance_result(payload: JSONDict | None) -> dict[str, Any] | None:
-    """解析合规检查结果"""
+    """解析合规检查结果（带Schema验证）"""
     if not payload:
         return None
+
+    # 🔧 新增：Schema验证
+    is_valid, error_msg = validate_agent_output("compliance_agent", payload)
+    if not is_valid:
+        logger.warning(f"Compliance agent output validation failed: {error_msg}")
+        return None
+
     notes = payload.get("compliance_notes")
     reason = payload.get("manual_review_reason")
     if not isinstance(notes, list) or not all(isinstance(item, str) for item in notes):

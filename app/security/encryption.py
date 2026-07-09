@@ -39,16 +39,21 @@ class EncryptionService:
 
         Args:
             master_key: 主密钥，如果不提供则从环境变量读取
+
+        Raises:
+            ValueError: 如果未配置 ENCRYPTION_MASTER_KEY
         """
         if master_key is None:
-            # 从环境变量读取或生成
+            # 从环境变量读取（必需）
             master_key_str = os.getenv("ENCRYPTION_MASTER_KEY")
-            if master_key_str:
-                master_key = master_key_str.encode()
-            else:
-                # 开发环境：生成临时密钥（生产环境必须配置）
-                master_key = Fernet.generate_key()
-                print("⚠️ 警告: 使用临时加密密钥，请在生产环境配置 ENCRYPTION_MASTER_KEY")
+            if not master_key_str:
+                raise ValueError(
+                    "ENCRYPTION_MASTER_KEY is required for data encryption.\n"
+                    "Generate with:\n"
+                    "python -c \"from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())\"\n"
+                    "Then set in .env file: ENCRYPTION_MASTER_KEY=<generated_key>"
+                )
+            master_key = master_key_str.encode()
 
         self.master_key = master_key
         self.fernet = Fernet(master_key)

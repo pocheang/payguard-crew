@@ -24,7 +24,7 @@ def run_crewai_json_task(
 
 
 async def run_crewai_json_task_async(
-    spec: AgentSpec, context: JSONDict
+    spec: AgentSpec, context: JSONDict, max_retries: int = 3
 ) -> tuple[JSONDict | None, int, str | None]:
     """
     异步执行 CrewAI JSON 任务（优化版）
@@ -32,6 +32,12 @@ async def run_crewai_json_task_async(
     优化点：
     1. 支持异步执行
     2. 添加超时控制（5秒）
+    3. 🔧 新增：重试机制（3次，指数退避）
+
+    Args:
+        spec: Agent规格
+        context: 上下文数据
+        max_retries: 最大重试次数（默认3次）
 
     Returns:
         (payload, latency_ms, error_message)
@@ -48,27 +54,60 @@ async def run_crewai_json_task_async(
         return None, 0, "CrewAI package not installed"
 
     started = perf_counter()
+    last_error = None
 
-    try:
-        # 🚀 优化点：添加超时控制
-        result = await asyncio.wait_for(
-            asyncio.to_thread(_run_crewai_task_sync, spec, context),
-            timeout=5.0  # 5秒超时
-        )
+    # 🔧 优化：重试机制（指数退避）
+    for attempt in range(max_retries):
+        try:
+            # 超时时间：5秒 + 每次重试额外增加2秒
+            timeout = 5.0 + (attempt * 2.0)
 
-        payload = extract_json_object(result)
-        latency_ms = int((perf_counter() - started) * 1000)
+            result = await asyncio.wait_for(
+                asyncio.to_thread(_run_crewai_task_sync, spec, context),
+                timeout=timeout
+            )
 
-        if payload is None:
-            return None, latency_ms, "CrewAI returned invalid JSON"
-        return payload, latency_ms, None
+            payload = extract_json_object(result)
+            latency_ms = int((perf_counter() - started) * 1000)
 
-    except asyncio.TimeoutError:
-        latency_ms = int((perf_counter() - started) * 1000)
-        return None, latency_ms, "CrewAI timeout after 5s"
-    except Exception as exc:
-        latency_ms = int((perf_counter() - started) * 1000)
-        return None, latency_ms, f"{type(exc).__name__}: {exc}"
+            if payload is None:
+                last_error = "CrewAI returned invalid JSON"
+                # JSON解析失败，重试
+                if attempt < max_retries - 1:
+                    await asyncio.sleep(0.5 * (2 ** attempt))  # 指数退避：0.5s, 1s, 2s
+                    continue
+                return None, latency_ms, last_error
+
+            # 成功
+            return payload, latency_ms, None
+
+        except asyncio.TimeoutError:
+            latency_ms = int((perf_counter() - started) * 1000)
+            last_error = f"CrewAI timeout after {timeout}s (attempt {attempt + 1}/{max_retries})"
+
+            if attempt < max_retries - 1:
+                # 重试前等待（指数退避）
+                await asyncio.sleep(0.5 * (2 ** attempt))
+                continue
+
+            return None, latency_ms, last_error
+
+        except Exception as exc:
+            latency_ms = int((perf_counter() - started) * 1000)
+            last_error = f"{type(exc).__name__}: {exc}"
+
+            # 某些异常不应重试（如配置错误）
+            if "API key" in str(exc) or "authentication" in str(exc).lower():
+                return None, latency_ms, last_error
+
+            if attempt < max_retries - 1:
+                await asyncio.sleep(0.5 * (2 ** attempt))
+                continue
+
+            return None, latency_ms, last_error
+
+    # 所有重试失败
+    return None, int((perf_counter() - started) * 1000), last_error
 
 
 def _run_crewai_task_sync(spec: AgentSpec, context: JSONDict) -> Any:

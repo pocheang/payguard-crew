@@ -16,7 +16,13 @@ from app.config import get_settings
 
 
 # JWT configuration
-JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY", "CHANGE_THIS_IN_PRODUCTION")
+JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
+if not JWT_SECRET_KEY:
+    raise ValueError(
+        "JWT_SECRET_KEY is required. Generate with:\n"
+        "python -c \"import secrets; print(secrets.token_urlsafe(64))\""
+    )
+
 JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv("JWT_ACCESS_TOKEN_EXPIRE_MINUTES", "30"))
 JWT_REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("JWT_REFRESH_TOKEN_EXPIRE_DAYS", "7"))
@@ -170,14 +176,20 @@ def validate_jwt_config():
     """Validate JWT configuration on startup."""
     settings = get_settings()
 
-    if settings.app_env in ["prod", "production"]:
-        if JWT_SECRET_KEY == "CHANGE_THIS_IN_PRODUCTION":
-            raise ValueError(
-                "⚠️ CRITICAL: JWT_SECRET_KEY must be changed in production! "
-                "Set environment variable JWT_SECRET_KEY to a secure random string."
-            )
+    # Validate in ALL environments
+    if not JWT_SECRET_KEY:
+        raise ValueError(
+            "JWT_SECRET_KEY is required in all environments"
+        )
 
-        if len(JWT_SECRET_KEY) < 32:
+    if len(JWT_SECRET_KEY) < 32:
+        raise ValueError(
+            "JWT_SECRET_KEY must be at least 32 characters long for security"
+        )
+
+    # Additional checks for production
+    if settings.app_env in ["prod", "production"]:
+        if len(JWT_SECRET_KEY) < 64:
             raise ValueError(
-                "⚠️ CRITICAL: JWT_SECRET_KEY must be at least 32 characters long."
+                "Production JWT_SECRET_KEY should be at least 64 characters"
             )

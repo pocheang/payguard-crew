@@ -5,7 +5,7 @@ from time import perf_counter
 from typing import Optional
 
 from app.config import get_settings
-from app.schemas.audit import AuditLogEntry
+from app.schemas.audit import AuditLogEntry, EvidenceItem
 from app.schemas.transaction import TransactionInput
 from app.rag.retriever import AuditEvidenceRetriever
 from app.rules.risk_rules import build_rule_query
@@ -14,6 +14,24 @@ from app.crew.crewai_runner import run_crewai_json_task_async
 from app.crew.parsers import parse_evidence_summary, parse_report_payload
 from app.crew.fallbacks import build_fallback_summary, build_fallback_suggestion
 from app.crew.utils import log_status
+
+
+def _build_evidence_summary_fallback(evidence: list[EvidenceItem]) -> str:
+    """
+    构建证据摘要的本地降级逻辑
+
+    当LLM不可用时，从证据列表中提取关键信息
+    """
+    if not evidence:
+        return "未检索到相关政策文档"
+
+    summaries = []
+    for item in evidence[:3]:  # 只取前3条
+        source = item.source or "未知文档"
+        content_preview = item.content[:100] + "..." if len(item.content) > 100 else item.content
+        summaries.append(f"来源《{source}》: {content_preview}")
+
+    return "；".join(summaries)
 
 
 async def run_rag_agent(
@@ -40,10 +58,15 @@ async def run_rag_agent(
     if rag_payload and evidence_summary is None:
         rag_error = rag_error or "CrewAI payload missing evidence summary"
 
+    # 🔧 优化：添加fallback逻辑
+    if evidence_summary is None and evidence:
+        # 本地降级：从证据中提取关键信息
+        evidence_summary = _build_evidence_summary_fallback(evidence)
+
     rag_output = {
-        "backend": "crewai" if evidence_summary else "local",
+        "backend": "crewai" if rag_payload and evidence_summary else "local",
         "evidence": [item.model_dump() for item in evidence],
-        "evidence_summary": evidence_summary,
+        "evidence_summary": evidence_summary or "无相关证据",
     }
 
     log_entry = AuditLogEntry(

@@ -50,6 +50,7 @@ htmlcov/
 *.db
 *.sqlite
 *.sqlite3
+payguard_crew.db
 
 # Logs
 *.log

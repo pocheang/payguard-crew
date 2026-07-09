@@ -17,27 +17,27 @@ def get_valid_api_keys() -> set[str]:
 def verify_api_key(api_key: str = Security(API_KEY_HEADER)) -> str:
     """验证 API Key
 
-    如果未配置 API_KEYS 环境变量，将允许所有请求（开发模式）
-    生产环境必须配置 API_KEYS
+    所有环境都必须配置 API_KEYS
+
+    Raises:
+        HTTPException: 401 如果未提供或API Key无效
+        HTTPException: 503 如果未配置API Keys
     """
     valid_keys = get_valid_api_keys()
 
-    # 如果未配置 API Keys，允许访问（开发模式）
+    # 如果未配置 API Keys，拒绝访问
     if not valid_keys:
-        import warnings
-        warnings.warn(
-            "⚠️ 未配置 API_KEYS 环境变量，API 未受保护！\n"
-            "生产环境请务必配置 API_KEYS",
-            UserWarning,
-            stacklevel=2
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Service misconfigured: API authentication not enabled. "
+                   "Administrator must configure API_KEYS environment variable.",
         )
-        return "dev-mode"
 
     # 检查是否提供了 API Key
     if not api_key:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="缺少 API Key。请在请求头中添加 X-API-Key",
+            detail="Missing API Key. Add X-API-Key header to your request.",
             headers={"WWW-Authenticate": "ApiKey"}
         )
 
@@ -45,7 +45,7 @@ def verify_api_key(api_key: str = Security(API_KEY_HEADER)) -> str:
     if api_key not in valid_keys:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="无效的 API Key",
+            detail="Invalid API Key",
             headers={"WWW-Authenticate": "ApiKey"}
         )
 

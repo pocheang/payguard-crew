@@ -32,8 +32,16 @@ class AuditEvidenceRetriever:
         if self.vector_store is not None:
             try:
                 evidence = self.vector_store.query(query=query, top_k=top_k)
-                if evidence:
-                    return evidence
-            except Exception:
-        # 空实现
+                # 修复: 空列表也是有效结果，直接返回
+                return evidence
+            except (ConnectionError, TimeoutError) as e:
+                # 网络或超时错误，记录并降级
+                import logging
+                logging.warning(f"ChromaDB connection/timeout error, falling back to simple retriever: {e}")
+            except Exception as e:
+                # 其他未预期错误，记录详细信息
+                import logging
+                logging.error(f"Unexpected error in vector store query: {e}", exc_info=True)
+
+        # 降级到简单检索器
         return self.simple_retriever.retrieve(query=query, top_k=top_k)

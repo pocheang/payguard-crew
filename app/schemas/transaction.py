@@ -102,6 +102,28 @@ class TransactionInput(BaseModel):
         description="交易时间戳"
     )
 
+    @field_validator("timestamp")
+    @classmethod
+    def validate_timestamp(cls, v: datetime) -> datetime:
+        """验证时间戳的合理性"""
+        from datetime import timezone, timedelta
+
+        now = datetime.now(timezone.utc)
+
+        # 确保时间戳有时区信息
+        if v.tzinfo is None:
+            v = v.replace(tzinfo=timezone.utc)
+
+        # 检查时间戳不能是未来时间（允许5分钟误差）
+        if v > now + timedelta(minutes=5):
+            raise ValueError("Transaction timestamp cannot be in the future")
+
+        # 检查时间戳不能太旧（不超过30天）
+        if v < now - timedelta(days=30):
+            raise ValueError("Transaction timestamp is too old (exceeds 30 days)")
+
+        return v
+
     # 可选字段：用于高级风控分析
     device_id: str | None = Field(
         default=None,

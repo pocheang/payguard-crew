@@ -1,31 +1,42 @@
-fastapi>=0.111.0
-uvicorn[standard]>=0.30.0
-pydantic>=2.7.0
-python-dotenv>=1.0.1
-pytest>=8.2.0
-python-json-logger>=2.0.7
-slowapi>=0.1.9
+# Core Framework
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+pydantic==2.9.2
+python-dotenv==1.0.1
+python-json-logger==2.0.7
+slowapi==0.1.9
 
-# Database support
-sqlalchemy>=2.0.29
-alembic>=1.13.0
+# Database
+sqlalchemy==2.0.35
+alembic==1.13.3
 
 # Authentication & Security
-PyJWT>=2.8.0
-passlib[bcrypt]>=1.7.4
-cryptography>=41.0.7
+PyJWT==2.9.0
+passlib[bcrypt]==1.7.4
+cryptography==43.0.1
 
 # Monitoring & Tracing
-opentelemetry-api>=1.21.0
-opentelemetry-sdk>=1.21.0
-opentelemetry-instrumentation-fastapi>=0.42b0
-opentelemetry-instrumentation-sqlalchemy>=0.42b0
-opentelemetry-exporter-otlp>=1.21.0
-prometheus-client>=0.20.0
-sentry-sdk>=1.39.0
+opentelemetry-api==1.27.0
+opentelemetry-sdk==1.27.0
+opentelemetry-instrumentation-fastapi==0.48b0
+opentelemetry-instrumentation-sqlalchemy==0.48b0
+opentelemetry-exporter-otlp==1.27.0
+prometheus-client==0.21.0
+sentry-sdk==2.14.0
 
-# Optional for AI features:
-crewai>=0.80.0
-langchain>=0.2.0
-chromadb>=0.5.0
-openai>=1.30.0
+# Testing
+pytest==8.3.3
+pytest-asyncio==0.24.0
+pytest-cov==5.0.0
+
+# AI Features (Optional)
+crewai==0.86.0
+langchain==0.3.1
+langchain-community==0.3.1
+langchain-openai==0.2.1
+chromadb==0.5.5
+openai==1.51.0
+
+# Redis for production rate limiting
+redis==5.1.1
+hiredis==3.0.0

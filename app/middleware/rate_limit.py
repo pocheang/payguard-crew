@@ -2,7 +2,9 @@
 速率限制中间件
 
 使用滑动窗口算法限制 API 调用频率，防止滥用
+生产环境建议使用Redis存储，开发环境可使用内存存储
 """
+import os
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -26,10 +28,22 @@ def rate_limit_key_func(request: Request) -> str:
 
 
 # 创建限流器实例
+# 生产环境使用Redis: REDIS_URL=redis://localhost:6379/0
+# 开发环境使用内存: REDIS_URL未设置
+REDIS_URL = os.getenv("REDIS_URL")
+storage_uri = REDIS_URL if REDIS_URL else "memory://"
+
+if not REDIS_URL:
+    import warnings
+    warnings.warn(
+        "⚠️ Rate limiting using memory storage. For production, set REDIS_URL environment variable.",
+        UserWarning
+    )
+
 limiter = Limiter(
     key_func=rate_limit_key_func,
     default_limits=["100/minute", "1000/hour"],
-    storage_uri="memory://",
+    storage_uri=storage_uri,
     headers_enabled=True,
 )
 

@@ -3,6 +3,7 @@ from functools import lru_cache
 from pathlib import Path
 
 from dotenv import load_dotenv
+from app.core.environment import Environment
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 load_dotenv(PROJECT_ROOT / ".env")
@@ -19,7 +20,11 @@ def _env_flag(name: str, default: bool = False) -> bool:
 class Settings:
     def __init__(self) -> None:
         self.app_name = os.getenv("APP_NAME", "payguard-crew")
-        self.app_env = os.getenv("APP_ENV", "dev")
+
+        # 使用环境枚举，提供类型安全
+        env_str = os.getenv("APP_ENV", "dev")
+        self.app_env = Environment.from_string(env_str)
+
         self.docs_dir = Path(
             os.getenv("PAYGUARD_DOCS_DIR", str(PROJECT_ROOT / "docs"))
         ).resolve()
@@ -195,6 +200,16 @@ class Settings:
             raise ValueError(
                 f"LLM_MAX_RETRIES 必须在 0-5 之间，当前值: {self.llm_max_retries}"
             )
+
+    @property
+    def is_production(self) -> bool:
+        """是否为生产环境"""
+        return self.app_env.is_production
+
+    @property
+    def is_development(self) -> bool:
+        """是否为开发环境"""
+        return self.app_env.is_development
 
 
 @lru_cache
