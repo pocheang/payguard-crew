@@ -11,11 +11,11 @@
 
 | 接口 | 方法 | 功能 | 性能 |
 |------|------|------|------|
-| `/api/v1/audit/batch` | POST | 批量审计交易 | 10个/3-5秒 |
-| `/api/v1/audit/export/csv` | GET | 导出CSV报告 | 1000条/秒级 |
-| `/api/v1/audit/export/excel` | GET | 导出Excel报告 | 1000条/秒级 |
-| `/api/v1/audit/statistics` | GET | 统计分析 | 秒级响应 |
-| `/api/v1/audit/list` | GET | 查询报告列表 | 支持分页筛选 |
+| `/api/batch/batch` | POST | 批量审计交易 | 10个/3-5秒 |
+| `/api/batch/export/csv` | GET | 导出CSV报告 | 1000条/秒级 |
+| `/api/batch/export/excel` | GET | 导出Excel报告 | 1000条/秒级 |
+| `/api/batch/statistics` | GET | 统计分析 | 秒级响应 |
+| `/api/batch/list` | GET | 查询报告列表 | 支持分页筛选 |
 
 ---
 
@@ -26,7 +26,7 @@
 **场景**: 一次性审计多个交易，提高效率
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/audit/batch" \
+curl -X POST "http://localhost:8000/api/batch/batch" \
   -H "X-API-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -99,7 +99,7 @@ curl -X POST "http://localhost:8000/api/v1/audit/batch" \
 **场景**: 导出审计报告用于Excel分析或归档
 
 ```bash
-curl -X GET "http://localhost:8000/api/v1/audit/export/csv?transaction_ids=TX001&transaction_ids=TX002&transaction_ids=TX003" \
+curl -X GET "http://localhost:8000/api/batch/export/csv?transaction_ids=TX001&transaction_ids=TX002&transaction_ids=TX003" \
   -H "X-API-Key: YOUR_API_KEY" \
   --output audit_reports.csv
 ```
@@ -122,7 +122,7 @@ TX002,U002,M002,75,high,review,5,是,2026-06-28T10:05:00,多个高风险信号..
 pip install openpyxl
 
 # 导出
-curl -X GET "http://localhost:8000/api/v1/audit/export/excel?transaction_ids=TX001&transaction_ids=TX002" \
+curl -X GET "http://localhost:8000/api/batch/export/excel?transaction_ids=TX001&transaction_ids=TX002" \
   -H "X-API-Key: YOUR_API_KEY" \
   --output audit_reports.xlsx
 ```
@@ -141,11 +141,11 @@ curl -X GET "http://localhost:8000/api/v1/audit/export/excel?transaction_ids=TX0
 
 ```bash
 # 查询全部统计
-curl -X GET "http://localhost:8000/api/v1/audit/statistics" \
+curl -X GET "http://localhost:8000/api/batch/statistics" \
   -H "X-API-Key: YOUR_API_KEY"
 
 # 查询特定时间段
-curl -X GET "http://localhost:8000/api/v1/audit/statistics?start_date=2026-01-01&end_date=2026-12-31" \
+curl -X GET "http://localhost:8000/api/batch/statistics?start_date=2026-01-01&end_date=2026-12-31" \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
@@ -185,11 +185,11 @@ curl -X GET "http://localhost:8000/api/v1/audit/statistics?start_date=2026-01-01
 
 ```bash
 # 分页查询
-curl -X GET "http://localhost:8000/api/v1/audit/list?limit=50&offset=0" \
+curl -X GET "http://localhost:8000/api/batch/list?limit=50&offset=0" \
   -H "X-API-Key: YOUR_API_KEY"
 
 # 筛选高风险且需要拒绝的交易
-curl -X GET "http://localhost:8000/api/v1/audit/list?risk_level=high&decision=reject" \
+curl -X GET "http://localhost:8000/api/batch/list?risk_level=high&decision=reject" \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
@@ -230,7 +230,7 @@ class PayGuardClient:
     def batch_audit(self, transactions: list, max_concurrent: int = 10):
         """批量审计"""
         response = requests.post(
-            f"{self.base_url}/api/v1/audit/batch",
+            f"{self.base_url}/api/audit/batch",
             headers=self.headers,
             json={
                 "transactions": transactions,
@@ -243,7 +243,7 @@ class PayGuardClient:
         """导出CSV"""
         params = {"transaction_ids": transaction_ids}
         response = requests.get(
-            f"{self.base_url}/api/v1/audit/export/csv",
+            f"{self.base_url}/api/audit/export/csv",
             headers=self.headers,
             params=params
         )
@@ -259,7 +259,7 @@ class PayGuardClient:
             params['end_date'] = end_date
         
         response = requests.get(
-            f"{self.base_url}/api/v1/audit/statistics",
+            f"{self.base_url}/api/audit/statistics",
             headers=self.headers,
             params=params
         )
@@ -395,6 +395,6 @@ def monthly_archive():
 - `app/api/batch.py` - API接口
 - `BATCH_FEATURES.md` - 本文档
 
-**已更新**: `app/main_v2.py` - 注册新路由
+**已更新**: `app/main.py` - 注册新路由
 
 **状态**: ✅ 功能完整，可立即使用
