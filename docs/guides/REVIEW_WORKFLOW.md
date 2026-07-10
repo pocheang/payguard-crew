@@ -39,13 +39,13 @@
 
 | 接口 | 方法 | 功能 |
 |------|------|------|
-| `/api/v1/review/create` | POST | 创建审核记录 |
-| `/api/v1/review/{tx_id}/status` | POST | 更新审核状态 |
-| `/api/v1/review/{tx_id}/assign` | POST | 分配审核人 |
-| `/api/v1/review/{tx_id}/comment` | POST | 添加评论 |
-| `/api/v1/review/{tx_id}` | GET | 获取审核详情 |
-| `/api/v1/review/pending` | GET | 待审核列表 |
-| `/api/v1/review/statistics` | GET | 审核统计 |
+| `/api/review/create` | POST | 创建审核记录 |
+| `/api/review/{tx_id}/status` | POST | 更新审核状态 |
+| `/api/review/{tx_id}/assign` | POST | 分配审核人 |
+| `/api/review/{tx_id}/comment` | POST | 添加评论 |
+| `/api/review/{tx_id}` | GET | 获取审核详情 |
+| `/api/review/list/pending` | GET | 待审核列表 |
+| `/api/review/statistics` | GET | 审核统计 |
 
 ---
 
@@ -54,7 +54,7 @@
 ### 1. 创建审核记录
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/review/create" \
+curl -X POST "http://localhost:8000/api/review/create" \
   -H "X-API-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -67,8 +67,9 @@ curl -X POST "http://localhost:8000/api/v1/review/create" \
 ### 2. 开始审核
 
 ```bash
-curl -X POST "http://localhost:8000/api/v1/review/TX001/status" \
+curl -X POST "http://localhost:8000/api/review/TX001/status" \
   -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
   -d '{
     "status": "in_review",
     "reviewer": "reviewer01",
@@ -80,8 +81,9 @@ curl -X POST "http://localhost:8000/api/v1/review/TX001/status" \
 
 ```bash
 # 批准
-curl -X POST "http://localhost:8000/api/v1/review/TX001/status" \
+curl -X POST "http://localhost:8000/api/review/TX001/status" \
   -H "X-API-Key: YOUR_API_KEY" \
+  -H "Content-Type: application/json" \
   -d '{
     "status": "approved",
     "reviewer": "reviewer01",
@@ -93,11 +95,11 @@ curl -X POST "http://localhost:8000/api/v1/review/TX001/status" \
 
 ```bash
 # 我的待审核
-curl -X GET "http://localhost:8000/api/v1/review/pending?assigned_to=reviewer01" \
+curl -X GET "http://localhost:8000/api/review/list/pending?assigned_to=reviewer01" \
   -H "X-API-Key: YOUR_API_KEY"
 
 # 高优先级
-curl -X GET "http://localhost:8000/api/v1/review/pending?priority=high" \
+curl -X GET "http://localhost:8000/api/review/list/pending?priority=high" \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
