@@ -62,25 +62,12 @@
 | [AML审核指南](guides/aml_review_guide.md) | 反洗钱审核流程 |
 | [人工审核流程](guides/manual_review_process.md) | 人工审核标准 |
 
-### 📊 技术报告
-
-| 文档 | 说明 |
-|------|------|
-| [项目综合报告](reports/PROJECT_SUMMARY.md) | ⭐ 完整项目总结 |
-| [代码审查报告](reports/CODE_REVIEW_REPORT.md) | 代码质量分析 |
-| [性能优化报告](reports/PERFORMANCE_OPTIMIZATION_REPORT.md) | 性能优化详情 |
-| [修复完成报告](reports/FIXES_COMPLETED.md) | Bug修复记录 |
-| [安全审计报告](reports/SECURITY_AUDIT_REPORT.md) | 安全性分析 |
-| [企业架构](reports/ENTERPRISE_ARCHITECTURE.md) | 企业级架构设计 |
-
 ### 🔧 工具和脚本
 
 | 文档 | 说明 |
 |------|------|
 | [GitHub指南](guides/GITHUB_GUIDE.md) | GitHub工作流程 |
 | [Git提交规范](guides/GIT_COMMIT_GUIDE.md) | 提交消息规范 |
-| [重构指南](guides/REFACTORING_GUIDE.md) | 代码重构指南 |
-| [修复实施指南](guides/FIX_IMPLEMENTATION_GUIDE.md) | Bug修复流程 |
 
 ---
 
@@ -95,8 +82,8 @@ docs/
 │
 ├── guides/                             # 使用指南
 │   ├── QUICK_START.md                 # 快速开始
-│   ├── DOCKER.md                      # Docker部署（合并）
-│   ├── DEMO.md                        # 演示指南（合并）
+│   ├── DOCKER.md                      # Docker部署
+│   ├── DEMO.md                        # 演示指南
 │   ├── ENVIRONMENT_GUIDE.md           # 环境配置
 │   ├── CODE_ORGANIZATION_GUIDE.md     # 代码组织
 │   ├── LLM_CONFIG_GUIDE.md            # LLM配置
@@ -109,27 +96,11 @@ docs/
 │   ├── aml_review_guide.md            # AML审核指南
 │   └── manual_review_process.md       # 人工审核流程
 │
-├── architecture/                       # 架构文档
-│   ├── SYSTEM_COMPLETE.md             # 系统架构
-│   ├── FRONTEND_COMPLETION.md         # 前端架构
-│   ├── FRONTEND_VISUALIZATION.md      # 前端可视化
-│   └── REVIEW_ENHANCEMENTS.md         # 审核增强
-│
-├── reports/                            # 技术报告
-│   ├── PROJECT_SUMMARY.md             # ⭐ 项目综合报告
-│   ├── CODE_REVIEW_REPORT.md          # 代码审查
-│   ├── PERFORMANCE_OPTIMIZATION_REPORT.md  # 性能优化
-│   ├── FIXES_COMPLETED.md             # 修复完成
-│   ├── SECURITY_AUDIT_REPORT.md       # 安全审计
-│   ├── ENTERPRISE_ARCHITECTURE.md     # 企业架构
-│   ├── ENTERPRISE_FEATURES.md         # 企业功能
-│   └── ...                            # 其他报告
-│
-└── archive/                            # 历史文档
-    ├── COMPLETION_PLAN.md             # 完成计划
-    ├── DEMO_STATUS.md                 # 演示状态
-    ├── ENVIRONMENT_SUMMARY.md         # 环境总结
-    └── ...                            # 其他历史文档
+└── architecture/                       # 架构文档
+    ├── SYSTEM_COMPLETE.md             # 系统架构
+    ├── FRONTEND_COMPLETION.md         # 前端架构
+    ├── FRONTEND_VISUALIZATION.md      # 前端可视化
+    └── REVIEW_ENHANCEMENTS.md         # 审核增强
 ```
 
 ---
@@ -148,14 +119,13 @@ docs/
 1. [代码组织指南](guides/CODE_ORGANIZATION_GUIDE.md) - 理解架构
 2. [系统架构](architecture/SYSTEM_COMPLETE.md) - 深入设计
 3. [贡献指南](../CONTRIBUTING.md) - 参与开发
-4. [代码审查报告](reports/CODE_REVIEW_REPORT.md) - 了解质量
+4. [API文档](api/API_DOCUMENTATION.md) - 集成接口
 
 ### 路径3: 运维部署（1小时）
 
 1. [Docker部署](guides/DOCKER.md) - 部署方案
 2. [环境配置](guides/ENVIRONMENT_GUIDE.md) - 配置详解
 3. [故障排除](guides/TROUBLESHOOTING.md) - 问题解决
-4. [性能优化报告](reports/PERFORMANCE_OPTIMIZATION_REPORT.md) - 优化建议
 
 ### 路径4: 业务使用（1小时）
 
@@ -183,7 +153,6 @@ docs/
 - [代码组织](guides/CODE_ORGANIZATION_GUIDE.md)
 - [贡献指南](../CONTRIBUTING.md)
 - [Git规范](guides/GIT_COMMIT_GUIDE.md)
-- [重构指南](guides/REFACTORING_GUIDE.md)
 
 ### 业务和规则
 - [支付风险规则](guides/payment_risk_rules.md)
@@ -193,8 +162,6 @@ docs/
 
 ### 故障和优化
 - [故障排除](guides/TROUBLESHOOTING.md)
-- [性能优化](reports/PERFORMANCE_OPTIMIZATION_REPORT.md)
-- [安全审计](reports/SECURITY_AUDIT_REPORT.md)
 
 ---
 
@@ -255,24 +222,16 @@ docs/
 ## 🎉 文档更新日志
 
 ### v0.2.0 (2026-07-10)
-- ✅ 重组文档结构（39个文件 → 结构化）
+- ✅ 重组文档结构
 - ✅ 合并Docker文档（3个 → 1个）
 - ✅ 合并Demo文档（3个 → 1个）
-- ✅ 创建项目综合报告
 - ✅ 更新所有文档索引
 - ✅ 添加推荐阅读路径
-
-### v0.1.0 (2026-07-09)
-- ✅ 初始文档集合
-- ✅ API文档
-- ✅ 快速开始指南
-- ✅ Docker部署指南
 
 ---
 
 **文档维护**: PayGuard Team  
-**最后更新**: 2026-07-10  
-**下次审查**: v0.3.0 发布时
+**最后更新**: 2026-07-10
 
 ---
 

@@ -35,6 +35,37 @@ chroma_db/
 *.index
 chroma.sqlite3
 
+# ==================== 内部文档（不公开）====================
+# 根目录的内部文档
+ORGANIZATION_SUMMARY.md
+PROJECT_READY.md
+PROJECT_STATUS.md
+COMPLETION_*.md
+DOCKER_STATUS.txt
+P1_TASKS_COMPLETE.md
+
+# 技术报告目录（内部评估）
+docs/reports/
+
+# 历史归档文档
+docs/archive/
+
+# 验证和检查报告
+docs/GUIDES_CHECK_REPORT.md
+docs/REPORT_ORGANIZATION.md
+docs/DOCUMENTATION_INDEX.md
+docs/PROJECT_STRUCTURE.md
+docs/MIGRATION_GUIDE.md
+
+# 前端问题报告
+frontend/ISSUES_REPORT.md
+frontend/FEATURE_CHECKLIST.md
+
+# 备份文件
+*_backup.py
+*_old.py
+*_enhanced.py
+
 # ==================== Python ====================
 # 字节码
 __pycache__/
@@ -207,3 +238,8 @@ temp/
 # 保留必要的空目录
 !data/.gitkeep
 !logs/.gitkeep
+
+# ==================== 部署脚本（内部）====================
+deploy.bat
+start.bat
+start.ps1
