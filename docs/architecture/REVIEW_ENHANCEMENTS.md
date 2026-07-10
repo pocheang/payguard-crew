@@ -342,7 +342,9 @@ for reviewer in stats['top_reviewers']:
 
 ## 📞 联系方式
 
-如有问题或建议，请联系开发团队。
+- 📧 Email: po.cheang@gmail.com
+- 🌐 GitHub: https://github.com/pocheang/payguard-crew
+- 💬 Issues: https://github.com/pocheang/payguard-crew/issues
 
 ---
 

@@ -313,8 +313,8 @@ pytest --cov=app --cov-report=html
 
 ## 📞 联系方式
 
-- 📧 Email: support@payguard.com
-- 💬 Issues: [GitHub Issues](https://github.com/yourusername/payguard/issues)
+- 📧 Email: po.cheang@gmail.com
+- 💬 Issues: [GitHub Issues](https://github.com/pocheang/payguard-crew/issues)
 - 📖 文档: [完整文档](docs/README.md)
 
 ---
@@ -323,7 +323,7 @@ pytest --cov=app --cov-report=html
 
 如果这个项目对你有帮助，请给我们一个Star！
 
-[![Star History Chart](https://api.star-history.com/svg?repos=yourusername/payguard&type=Date)](https://star-history.com/#yourusername/payguard&Date)
+[![Star History Chart](https://api.star-history.com/svg?repos=pocheang/payguard-crew&type=Date)](https://star-history.com/#pocheang/payguard-crew&Date)
 
 ---
 

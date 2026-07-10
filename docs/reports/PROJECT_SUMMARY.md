@@ -523,8 +523,8 @@ Total          131    21,793  18,797    1,198      1,798
 
 ## 📞 联系方式
 
-- 📧 Email: support@payguard.com
-- 💬 Issues: [GitHub Issues](https://github.com/yourusername/payguard/issues)
+- 📧 Email: po.cheang@gmail.com
+- 💬 Issues: [GitHub Issues](https://github.com/pocheang/payguard-crew/issues)
 - 📖 文档: [完整文档](../README.md)
 
 ---

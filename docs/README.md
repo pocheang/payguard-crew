@@ -224,9 +224,9 @@ docs/
 ## 🔗 外部资源
 
 ### 官方资源
-- 项目主页: https://github.com/yourusername/payguard
-- 在线文档: https://docs.payguard.com
-- 问题反馈: https://github.com/yourusername/payguard/issues
+- 项目主页: https://github.com/pocheang/payguard-crew
+- 问题反馈: https://github.com/pocheang/payguard-crew/issues
+- 联系邮箱: po.cheang@gmail.com
 
 ### 技术文档
 - [FastAPI文档](https://fastapi.tiangolo.com/)
@@ -248,7 +248,7 @@ docs/
 1. **查看文档** - 大多数问题在文档中都有答案
 2. **搜索Issues** - 可能其他人遇到过同样的问题
 3. **提问** - 在GitHub Issues中提问
-4. **联系我们** - support@payguard.com
+4. **联系我们** - po.cheang@gmail.com
 
 ---
 
