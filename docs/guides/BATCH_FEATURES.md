@@ -11,11 +11,11 @@
 
 | 接口 | 方法 | 功能 | 性能 |
 |------|------|------|------|
-| `/api/batch/batch` | POST | 批量审计交易 | 10个/3-5秒 |
-| `/api/batch/export/csv` | GET | 导出CSV报告 | 1000条/秒级 |
-| `/api/batch/export/excel` | GET | 导出Excel报告 | 1000条/秒级 |
-| `/api/batch/statistics` | GET | 统计分析 | 秒级响应 |
-| `/api/batch/list` | GET | 查询报告列表 | 支持分页筛选 |
+| `/api/audit/batch` | POST | 批量审计交易 | 10个/3-5秒 |
+| `/api/audit/export/csv` | GET | 导出CSV报告 | 1000条/秒级 |
+| `/api/audit/export/excel` | GET | 导出Excel报告 | 1000条/秒级 |
+| `/api/audit/statistics` | GET | 统计分析 | 秒级响应 |
+| `/api/audit/list` | GET | 查询报告列表 | 支持分页筛选 |
 
 ---
 
