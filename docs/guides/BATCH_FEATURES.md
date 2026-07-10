@@ -26,7 +26,7 @@
 **场景**: 一次性审计多个交易，提高效率
 
 ```bash
-curl -X POST "http://localhost:8000/api/batch/batch" \
+curl -X POST "http://localhost:8000/api/audit/batch" \
   -H "X-API-Key: YOUR_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -99,7 +99,7 @@ curl -X POST "http://localhost:8000/api/batch/batch" \
 **场景**: 导出审计报告用于Excel分析或归档
 
 ```bash
-curl -X GET "http://localhost:8000/api/batch/export/csv?transaction_ids=TX001&transaction_ids=TX002&transaction_ids=TX003" \
+curl -X GET "http://localhost:8000/api/audit/export/csv?transaction_ids=TX001&transaction_ids=TX002&transaction_ids=TX003" \
   -H "X-API-Key: YOUR_API_KEY" \
   --output audit_reports.csv
 ```
@@ -122,7 +122,7 @@ TX002,U002,M002,75,high,review,5,是,2026-06-28T10:05:00,多个高风险信号..
 pip install openpyxl
 
 # 导出
-curl -X GET "http://localhost:8000/api/batch/export/excel?transaction_ids=TX001&transaction_ids=TX002" \
+curl -X GET "http://localhost:8000/api/audit/export/excel?transaction_ids=TX001&transaction_ids=TX002" \
   -H "X-API-Key: YOUR_API_KEY" \
   --output audit_reports.xlsx
 ```
@@ -141,11 +141,11 @@ curl -X GET "http://localhost:8000/api/batch/export/excel?transaction_ids=TX001&
 
 ```bash
 # 查询全部统计
-curl -X GET "http://localhost:8000/api/batch/statistics" \
+curl -X GET "http://localhost:8000/api/audit/statistics" \
   -H "X-API-Key: YOUR_API_KEY"
 
 # 查询特定时间段
-curl -X GET "http://localhost:8000/api/batch/statistics?start_date=2026-01-01&end_date=2026-12-31" \
+curl -X GET "http://localhost:8000/api/audit/statistics?start_date=2026-01-01&end_date=2026-12-31" \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
@@ -185,11 +185,11 @@ curl -X GET "http://localhost:8000/api/batch/statistics?start_date=2026-01-01&en
 
 ```bash
 # 分页查询
-curl -X GET "http://localhost:8000/api/batch/list?limit=50&offset=0" \
+curl -X GET "http://localhost:8000/api/audit/list?limit=50&offset=0" \
   -H "X-API-Key: YOUR_API_KEY"
 
 # 筛选高风险且需要拒绝的交易
-curl -X GET "http://localhost:8000/api/batch/list?risk_level=high&decision=reject" \
+curl -X GET "http://localhost:8000/api/audit/list?risk_level=high&decision=reject" \
   -H "X-API-Key: YOUR_API_KEY"
 ```
 
