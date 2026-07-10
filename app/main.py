@@ -26,7 +26,7 @@ from app.api.batch import router as batch_router
 from app.api.review import router as review_router
 from app.api.auth import router as auth_router
 from app.api.health import router as health_router
-from app.api.metrics import router as metrics_router
+# from app.api.metrics import router as metrics_router  # Disabled: requires prometheus_client
 
 
 # 创建应用
@@ -57,7 +57,7 @@ app.include_router(batch_router, prefix="/api/audit", tags=["batch-audit"])
 app.include_router(review_router, prefix="/api/review", tags=["review-workflow"])
 app.include_router(auth_router, prefix="/api/auth", tags=["authentication"])
 app.include_router(health_router, prefix="/api/health", tags=["health"])
-app.include_router(metrics_router, prefix="/api/metrics", tags=["metrics"])
+# app.include_router(metrics_router, prefix="/api/metrics", tags=["metrics"])  # Disabled
 
 
 @app.get("/")

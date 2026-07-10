@@ -3,7 +3,9 @@
 
 提供类型安全的环境配置
 """
+import os
 from enum import Enum
+from typing import Optional
 
 
 class Environment(str, Enum):
@@ -39,3 +41,17 @@ class Environment(str, Enum):
             f"Invalid environment: '{value}'. "
             f"Valid values are: {valid_values}"
         )
+
+
+def get_env(key: str, default: Optional[str] = None) -> str:
+    """
+    获取环境变量
+
+    Args:
+        key: 环境变量名
+        default: 默认值
+
+    Returns:
+        环境变量值或默认值
+    """
+    return os.getenv(key, default)

@@ -1,26 +1,30 @@
 version: '3.8'
 
 services:
-  payguard-crew:
+  # 后端服务
+  backend:
     build:
       context: .
       dockerfile: Dockerfile
-    image: payguard-crew:latest
-    container_name: payguard-crew
-    ports:
-      - "8000:8000"
+    image: payguard-backend:latest
+    container_name: payguard-backend
     volumes:
-      # 挂载数据目录（持久化数据库和向量库）
       - ./data:/app/data
       - ./docs:/app/docs
       - ./.chroma:/app/.chroma
       - ./logs:/app/logs
-      # 可选：挂载 SQLite 数据库到宿主机
       - ./payguard_crew.db:/app/payguard_crew.db
     environment:
       # 应用配置
       - APP_NAME=payguard-crew
-      - APP_ENV=docker
+      - APP_ENV=development
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+
+      # JWT配置
+      - JWT_SECRET_KEY=VSgmlSX-UvRA90MclxehDraXlME5VxMqX_kmOxMRCuvyaD5dvPaqLKUsoYC5wYTz16NRHmOZggm5jJnZkJcmfQ
+      - JWT_ALGORITHM=HS256
+      - ACCESS_TOKEN_EXPIRE_MINUTES=30
 
       # LLM 配置（可选）
       - LLM_PROVIDER=${LLM_PROVIDER:-disabled}
@@ -49,20 +53,73 @@ services:
       - LLM_TIMEOUT_SECONDS=${LLM_TIMEOUT_SECONDS:-30}
       - LLM_MAX_RETRIES=${LLM_MAX_RETRIES:-2}
 
-    # 健康检查
     healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health/health"]
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 5s
+      start_period: 40s
 
-    # 重启策略
     restart: unless-stopped
-
-    # 网络
+    depends_on:
+      - redis
     networks:
       - payguard-network
+
+  # 前端服务
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://localhost/api
+    image: payguard-frontend:latest
+    container_name: payguard-frontend
+    restart: unless-stopped
+    networks:
+      - payguard-network
+
+  # Redis缓存服务
+  redis:
+    image: redis:7-alpine
+    container_name: payguard-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - payguard-network
+
+  # Nginx反向代理
+  nginx:
+    image: nginx:alpine
+    container_name: payguard-nginx
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+    restart: unless-stopped
+    networks:
+      - payguard-network
+
+volumes:
+  redis-data:
+    driver: local
 
 networks:
   payguard-network:

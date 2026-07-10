@@ -58,6 +58,7 @@ class Settings:
 
         # 启动时验证配置
         self._validate()
+        self._validate_production()
 
     @property
     def active_api_key(self) -> str | None:
@@ -210,6 +211,77 @@ class Settings:
     def is_development(self) -> bool:
         """是否为开发环境"""
         return self.app_env.is_development
+
+    def _validate_production(self) -> None:
+        """生产环境额外验证（增强安全性）"""
+        if not self.is_production:
+            return
+
+        import warnings
+
+        # 1. 强制要求强密钥
+        jwt_secret = os.getenv("JWT_SECRET_KEY", "")
+        if len(jwt_secret) < 32:
+            raise ValueError(
+                f"🔒 生产环境安全错误：JWT_SECRET_KEY 必须至少32字符\n"
+                f"当前长度: {len(jwt_secret)}\n"
+                f"建议使用: openssl rand -base64 32"
+            )
+
+        # 2. 检查默认密钥
+        dangerous_secrets = [
+            "your-secret-key-change-in-production",
+            "change-me",
+            "secret",
+            "password",
+            "admin"
+        ]
+        if any(secret in jwt_secret.lower() for secret in dangerous_secrets):
+            raise ValueError(
+                "🔒 生产环境安全错误：检测到使用默认或弱密钥\n"
+                "请使用强随机密钥"
+            )
+
+        # 3. 推荐使用 PostgreSQL
+        if "sqlite" in str(self.db_path).lower():
+            warnings.warn(
+                "⚠️  生产环境建议：\n"
+                "   使用 PostgreSQL 替代 SQLite 以获得更好的性能和并发支持\n"
+                "   设置: DATABASE_URL=postgresql://user:pass@localhost/payguard",
+                UserWarning
+            )
+
+        # 4. 推荐配置 Redis
+        if not os.getenv("REDIS_URL"):
+            warnings.warn(
+                "⚠️  生产环境建议：\n"
+                "   配置 Redis 以支持缓存和限流功能\n"
+                "   设置: REDIS_URL=redis://localhost:6379/0",
+                UserWarning
+            )
+
+        # 5. CORS 安全检查
+        allowed_origins = os.getenv("CORS_ORIGINS", "")
+        if "*" in allowed_origins:
+            raise ValueError(
+                "🔒 生产环境安全错误：CORS_ORIGINS 不能使用通配符 *\n"
+                "请明确指定允许的域名，例如: https://yourdomain.com"
+            )
+
+        if "http://" in allowed_origins and "localhost" not in allowed_origins:
+            warnings.warn(
+                "⚠️  生产环境安全建议：检测到 HTTP 协议\n"
+                "   建议配置 SSL 证书并使用 HTTPS",
+                UserWarning
+            )
+
+        # 6. API Keys 检查
+        api_keys = os.getenv("API_KEYS", "")
+        if not api_keys or len(api_keys.split(",")) < 1:
+            warnings.warn(
+                "⚠️  生产环境建议：配置 API_KEYS 以启用API认证",
+                UserWarning
+            )
 
 
 @lru_cache

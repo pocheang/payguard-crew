@@ -5,12 +5,12 @@ const routes = [
   {
     path: '/login',
     name: 'Login',
-    component: () => import('./views/Login.vue'),
+    component: () => import('../views/Login.vue'),
     meta: { requiresAuth: false }
   },
   {
     path: '/',
-    component: () => import('./layouts/MainLayout.vue'),
+    component: () => import('../layouts/MainLayout.vue'),
     meta: { requiresAuth: true },
     children: [
       {
@@ -20,32 +20,32 @@ const routes = [
       {
         path: 'dashboard',
         name: 'Dashboard',
-        component: () => import('./views/Dashboard.vue')
+        component: () => import('../views/Dashboard.vue')
       },
       {
         path: 'audit/single',
         name: 'SingleAudit',
-        component: () => import('./views/SingleAudit.vue')
+        component: () => import('../views/SingleAudit.vue')
       },
       {
         path: 'audit/batch',
         name: 'BatchAudit',
-        component: () => import('./views/BatchAudit.vue')
+        component: () => import('../views/BatchAudit.vue')
       },
       {
         path: 'review/pending',
         name: 'PendingReviews',
-        component: () => import('./views/PendingReviews.vue')
+        component: () => import('../views/PendingReviews.vue')
       },
       {
         path: 'review/:transactionId',
         name: 'ReviewDetail',
-        component: () => import('./views/ReviewDetail.vue')
+        component: () => import('../views/ReviewDetail.vue')
       },
       {
         path: 'reports',
         name: 'Reports',
-        component: () => import('./views/Reports.vue')
+        component: () => import('../views/Reports.vue')
       }
     ]
   }

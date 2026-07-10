@@ -44,8 +44,9 @@ FROM dependencies as final
 COPY . .
 
 # 创建必要目录
-RUN mkdir -p data logs .chroma && \
-    chmod -R 755 data logs .chroma
+RUN mkdir -p data logs .chroma docs && \
+    echo "# PayGuard Documentation" > docs/README.md && \
+    chmod -R 755 data logs .chroma docs
 
 # 创建非root用户（安全最佳实践）
 RUN useradd -m -u 1000 payguard && \

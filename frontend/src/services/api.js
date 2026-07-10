@@ -4,16 +4,9 @@ import router from '../router'
 
 // 获取API基础URL
 const getBaseURL = () => {
-  // 优先使用环境变量
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL
-  }
-  // 生产环境使用相对路径
-  if (import.meta.env.PROD) {
-    return '/api'
-  }
-  // 开发环境默认值
-  return 'http://localhost:8000'
+  // 开发和生产环境都使用相对路径，由 Vite 代理处理
+  // 这样避免了 CORS 问题和环境变量配置问题
+  return '/api'
 }
 
 const api = axios.create({
@@ -91,7 +84,7 @@ export const reviewAPI = {
   assignReviewer: (transactionId, data) => api.post(`/review/${transactionId}/assign`, data),
   addComment: (transactionId, data) => api.post(`/review/${transactionId}/comment`, data),
   getReviewDetail: (transactionId) => api.get(`/review/${transactionId}`),
-  getPendingReviews: (params) => api.get('/review/pending', { params }),
+  getPendingReviews: (params) => api.get('/review/list/pending', { params }),
   getStatistics: () => api.get('/review/statistics')
 }
 
