@@ -1,0 +1,241 @@
+/* 响应式布局优化 - Tailwind扩展 */
+
+/* 移动端优化 */
+@media (max-width: 640px) {
+  /* 减小卡片内边距 */
+  .card {
+    @apply p-4;
+  }
+
+  /* 减小标题字体 */
+  h1 {
+    @apply text-xl;
+  }
+
+  h2 {
+    @apply text-lg;
+  }
+
+  h3 {
+    @apply text-base;
+  }
+
+  /* 按钮全宽 */
+  .btn-primary,
+  .btn-secondary {
+    @apply w-full;
+  }
+
+  /* 表格横向滚动 */
+  .table-container {
+    @apply overflow-x-auto -mx-4 px-4;
+  }
+
+  /* 统计卡片单列 */
+  .stats-grid {
+    @apply grid-cols-1 gap-3;
+  }
+
+  /* 图表容器高度调整 */
+  .chart-container {
+    @apply h-64;
+  }
+}
+
+/* 平板端优化 */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .stats-grid {
+    @apply grid-cols-2 gap-4;
+  }
+
+  .chart-container {
+    @apply h-80;
+  }
+}
+
+/* 桌面端 */
+@media (min-width: 1025px) {
+  .stats-grid {
+    @apply grid-cols-4 gap-6;
+  }
+
+  .chart-container {
+    @apply h-96;
+  }
+}
+
+/* 触摸设备优化 */
+@media (hover: none) and (pointer: coarse) {
+  /* 增大可点击区域 */
+  button,
+  a,
+  input,
+  select {
+    @apply min-h-[44px];
+  }
+
+  /* 移除hover效果 */
+  .hover\:bg-gray-100:hover {
+    @apply bg-transparent;
+  }
+}
+
+/* 打印样式 */
+@media print {
+  /* 隐藏导航和操作按钮 */
+  nav,
+  .no-print,
+  button:not(.print-show) {
+    @apply hidden;
+  }
+
+  /* 展开所有折叠内容 */
+  details {
+    @apply block;
+  }
+
+  /* 移除阴影和背景 */
+  .card {
+    @apply shadow-none bg-transparent border border-gray-300;
+  }
+
+  /* 避免分页符打断 */
+  .card,
+  table,
+  .chart-container {
+    page-break-inside: avoid;
+  }
+
+  /* 黑白打印优化 */
+  * {
+    @apply text-black bg-white;
+  }
+}
+
+/* 暗黑模式支持 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    /* 暗色主题变量 */
+    --color-bg-primary: #1a202c;
+    --color-bg-secondary: #2d3748;
+    --color-text-primary: #f7fafc;
+    --color-text-secondary: #e2e8f0;
+    --color-border: #4a5568;
+  }
+
+  :root:not([data-theme="light"]) .card {
+    @apply bg-gray-800 text-gray-100 border-gray-700;
+  }
+
+  :root:not([data-theme="light"]) .badge {
+    @apply bg-gray-700 text-gray-200;
+  }
+}
+
+/* 小屏幕显示优化 */
+@media (max-width: 375px) {
+  /* 超小屏幕（如iPhone SE） */
+  .container {
+    @apply px-2;
+  }
+
+  .text-3xl {
+    @apply text-2xl;
+  }
+
+  .text-2xl {
+    @apply text-xl;
+  }
+
+  /* 堆叠显示统计数字和图标 */
+  .stat-card {
+    @apply flex-col items-start;
+  }
+}
+
+/* 横屏模式优化 */
+@media (max-height: 500px) and (orientation: landscape) {
+  /* 减小垂直间距 */
+  .space-y-6 {
+    @apply space-y-3;
+  }
+
+  /* 减小卡片高度 */
+  .card {
+    @apply py-3;
+  }
+
+  /* 固定头部 */
+  header {
+    @apply sticky top-0 z-50 bg-white;
+  }
+}
+
+/* 辅助功能 - 高对比度模式 */
+@media (prefers-contrast: high) {
+  .card {
+    @apply border-2 border-black;
+  }
+
+  .btn-primary {
+    @apply border-2 border-black;
+  }
+
+  .text-gray-600 {
+    @apply text-gray-900;
+  }
+}
+
+/* 减少动画（用户偏好） */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* 容器查询（现代浏览器） */
+@supports (container-type: inline-size) {
+  .responsive-container {
+    container-type: inline-size;
+  }
+
+  @container (max-width: 400px) {
+    .responsive-text {
+      @apply text-sm;
+    }
+  }
+}
+
+/* 网格布局增强 */
+.grid-auto-fit {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.grid-auto-fill {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+/* 滚动优化 */
+.smooth-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* 安全区域适配（iPhone刘海屏） */
+@supports (padding: env(safe-area-inset-bottom)) {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  .safe-area-top {
+    padding-top: env(safe-area-inset-top);
+  }
+}
